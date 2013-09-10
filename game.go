@@ -207,7 +207,14 @@ func play(doPassCards passCardFn, doPlayCard playCardFn) {
 	ticket := response.Ticket
 	if ticket != nil {
 		fmt.Println("playing")
-		gameInfo, _, _ := client.GetGameInfo(ticket)
+		gameInfo, ex, err := client.GetGameInfo(ticket)
+		if err != nil {
+			fmt.Println("Error", err)
+			return
+		}
+		if ex != nil {
+			fmt.Println("Exception", ex)
+		}
 		fmt.Println("game info:", gameInfo)
 
 		game := Game{info: gameInfo}
