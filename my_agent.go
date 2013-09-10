@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"./lib/AgentVsAgent"
 )
 
@@ -98,11 +99,26 @@ func doPassCards(round Round) []*AgentVsAgent.Card {
 
 func doPlayCard(trick Trick) *AgentVsAgent.Card {
 	trick.log("Current trick:", trick)
-	cardToPlay := playableCards(&trick)[0]
+	cardToPlay := pickCard(&trick)
 	trick.log("Playing card:", cardToPlay)
 	return cardToPlay
 }
 
 func main() {
 	play(doPassCards, doPlayCard)
+}
+
+func pickCard(trick *Trick) *AgentVsAgent.Card {
+	cards := playableCards(trick)
+	ch := make(chan *AgentVsAgent.Card)
+	timeout := time.After(800 * time.Millisecond)
+	select {
+		case card := <-ch:
+			return card
+		case <-timeout:
+			trick.log("*****Timeout*****")
+			trick.log("*****Timeout*****")
+			trick.log("*****Timeout*****")
+			return cards[0]
+	}
 }
