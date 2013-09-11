@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 	"./lib/AgentVsAgent"
+  "fmt"
 )
 
 func isLeadingTrick(trick *Trick) bool {
@@ -108,17 +109,83 @@ func main() {
 	play(doPassCards, doPlayCard)
 }
 
+type Card struct {
+	*AgentVsAgent.Card
+}
+
+func (card Card) order() int8 {
+	rank := card.Rank
+	switch rank {
+	case AgentVsAgent.Rank_TWO: return 1
+	case AgentVsAgent.Rank_THREE: return 2
+	case AgentVsAgent.Rank_FOUR: return 3
+	case AgentVsAgent.Rank_FIVE: return 4
+	case AgentVsAgent.Rank_SIX: return 5
+	case AgentVsAgent.Rank_SEVEN: return 6
+	case AgentVsAgent.Rank_EIGHT: return 7
+	case AgentVsAgent.Rank_NINE: return 8
+	case AgentVsAgent.Rank_TEN: return 9
+	case AgentVsAgent.Rank_JACK: return 10
+	case AgentVsAgent.Rank_QUEEN: return 11
+	case AgentVsAgent.Rank_KING: return 12
+	case AgentVsAgent.Rank_ACE: return 13
+	}
+
+	fmt.Println("Rank not found")
+	return 0
+}
+
+type cardEvaluation struct {
+	card Card
+	score int8
+}
+
 func pickCard(trick *Trick) *AgentVsAgent.Card {
-	cards := playableCards(trick)
-	ch := make(chan *AgentVsAgent.Card)
 	timeout := time.After(800 * time.Millisecond)
-	select {
-		case card := <-ch:
-			return card
-		case <-timeout:
+	cards := playableCards(trick)
+	evalCh := make(chan cardEvaluation)
+	evaluations := make(map[Card]cardEvaluation)
+
+	go evaluateTrick(cards, trick, evalCh)
+
+	for i := 0; i < len(cards); i++ {
+		trick.log("Waiting for an evaluation")
+		select {
+		case cardEval := <-evalCh:
+			trick.log("Card", cardEval.card, "evaluated at", cardEval.score)
+			evaluations[cardEval.card] = cardEval
+		case <- timeout:
 			trick.log("*****Timeout*****")
 			trick.log("*****Timeout*****")
 			trick.log("*****Timeout*****")
-			return cards[0]
+			break
+		}
+	}
+
+	trick.log("Number of evaluations:", len(evaluations))
+	var pick cardEvaluation
+	for _, evaluation := range evaluations {
+		trick.log("eval:", evaluation.card, evaluation.score)
+		if evaluation.score >= pick.score {
+			trick.log("winning evaluation")
+			pick = evaluation
+		}
+		trick.log("current pick:", pick)
+	}
+
+	return pick.card.Card
+}
+
+func evaluateTrick(cards []*AgentVsAgent.Card, trick *Trick, evalCh chan cardEvaluation) {
+	for _, card := range cards {
+		go func(card Card) {
+			evalCh <- evaluateCard(card, *trick)
+		} (Card{card})
 	}
 }
+
+func evaluateCard(card Card, trick Trick) cardEvaluation {
+	trick.log("evaluating play of", card)
+	return cardEvaluation{card, card.order()}
+}
+
