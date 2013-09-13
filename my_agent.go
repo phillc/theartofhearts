@@ -1,7 +1,6 @@
 package main
 
 import (
-	"time"
 	"./lib/AgentVsAgent"
   "fmt"
 )
@@ -92,7 +91,7 @@ func playableCards(trick *Trick) []*AgentVsAgent.Card {
 }
 
 func doPassCards(round Round) []*AgentVsAgent.Card {
-	cardsToPass := round.dealt[0:3]
+	cardsToPass := passCard(round)
 	round.log("Passing cards", cardsToPass)
 
 	return cardsToPass
@@ -131,61 +130,7 @@ func (card Card) order() int8 {
 	case AgentVsAgent.Rank_ACE: return 13
 	}
 
-	fmt.Println("Rank not found")
+	fmt.Println("*********Rank not found********")
 	return 0
-}
-
-type cardEvaluation struct {
-	card Card
-	score int8
-}
-
-func pickCard(trick *Trick) *AgentVsAgent.Card {
-	timeout := time.After(800 * time.Millisecond)
-	cards := playableCards(trick)
-	evalCh := make(chan cardEvaluation)
-	evaluations := make(map[Card]cardEvaluation)
-
-	go evaluateTrick(cards, trick, evalCh)
-
-	for i := 0; i < len(cards); i++ {
-		trick.log("Waiting for an evaluation")
-		select {
-		case cardEval := <-evalCh:
-			trick.log("Card", cardEval.card, "evaluated at", cardEval.score)
-			evaluations[cardEval.card] = cardEval
-		case <- timeout:
-			trick.log("*****Timeout*****")
-			trick.log("*****Timeout*****")
-			trick.log("*****Timeout*****")
-			break
-		}
-	}
-
-	trick.log("Number of evaluations:", len(evaluations))
-	var pick cardEvaluation
-	for _, evaluation := range evaluations {
-		trick.log("eval:", evaluation.card, evaluation.score)
-		if evaluation.score >= pick.score {
-			trick.log("winning evaluation")
-			pick = evaluation
-		}
-		trick.log("current pick:", pick)
-	}
-
-	return pick.card.Card
-}
-
-func evaluateTrick(cards []*AgentVsAgent.Card, trick *Trick, evalCh chan cardEvaluation) {
-	for _, card := range cards {
-		go func(card Card) {
-			evalCh <- evaluateCard(card, *trick)
-		} (Card{card})
-	}
-}
-
-func evaluateCard(card Card, trick Trick) cardEvaluation {
-	trick.log("evaluating play of", card)
-	return cardEvaluation{card, card.order()}
 }
 
