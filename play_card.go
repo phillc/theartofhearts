@@ -6,16 +6,16 @@ import (
   // "fmt"
 )
 
-type PickEvaluation struct {
+type PlayEvaluation struct {
 	card Card
 	score int8
 }
 
-func pickCard(trick *Trick) *AgentVsAgent.Card {
+func playCard(trick *Trick) *AgentVsAgent.Card {
 	timeout := time.After(800 * time.Millisecond)
 	cards := playableCards(trick)
-	evalCh := make(chan PickEvaluation)
-	evaluations := make(map[Card]PickEvaluation)
+	evalCh := make(chan PlayEvaluation)
+	evaluations := make(map[Card]PlayEvaluation)
 
 	go evaluateTrick(cards, trick, evalCh)
 
@@ -34,28 +34,28 @@ func pickCard(trick *Trick) *AgentVsAgent.Card {
 	}
 
 	trick.log("Number of evaluations:", len(evaluations))
-	var pick PickEvaluation
+	var play PlayEvaluation
 	for _, evaluation := range evaluations {
 		trick.log("eval:", evaluation.card, evaluation.score)
-		if evaluation.score >= pick.score {
+		if evaluation.score >= play.score {
 			trick.log("winning evaluation")
-			pick = evaluation
+			play = evaluation
 		}
-		trick.log("current pick:", pick)
+		trick.log("current play:", play)
 	}
 
-	return pick.card.Card
+	return play.card.Card
 }
 
-func evaluateTrick(cards []*AgentVsAgent.Card, trick *Trick, evalCh chan PickEvaluation) {
+func evaluateTrick(cards []*AgentVsAgent.Card, trick *Trick, evalCh chan PlayEvaluation) {
 	for _, card := range cards {
 		go func(card Card) {
-			evalCh <- evaluatePick(card, *trick)
+			evalCh <- evaluatePlay(card, *trick)
 		} (Card{card})
 	}
 }
 
-func evaluatePick(card Card, trick Trick) PickEvaluation {
+func evaluatePlay(card Card, trick Trick) PlayEvaluation {
 	trick.log("evaluating play of", card)
-	return PickEvaluation{card, card.order()}
+	return PlayEvaluation{card, card.order()}
 }
