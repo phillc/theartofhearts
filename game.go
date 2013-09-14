@@ -36,9 +36,9 @@ func (trick *Trick) run(opts *options) (err error) {
 	cardToPlay := (*opts.doPlayCard)(*trick)
 
 	var remainingCards []*AgentVsAgent.Card
-	for i := 0; i < len(trick.round.held); i++ {
-		if !(trick.round.held[i].Suit == cardToPlay.Suit && trick.round.held[i].Rank == cardToPlay.Rank) {
-			remainingCards = append(remainingCards, trick.round.held[i])
+	for _, heldCard := range trick.round.held {
+		if !(heldCard.Suit == cardToPlay.Suit && heldCard.Rank == cardToPlay.Rank) {
+			remainingCards = append(remainingCards, heldCard)
 		}
 	}
 	trick.round.held = remainingCards
@@ -92,18 +92,17 @@ func (round *Round) passCards(opts *options) (err error) {
 		cardsToPass := (*opts.doPassCards)(*round)
 
 		var newHeld []*AgentVsAgent.Card
-		for i := 0; i < len(round.held); i++ {
+		for _, heldCard := range round.held {
 			toRemove := false
-			card := round.held[i]
 
-			for j := 0; j < len(cardsToPass); j++ {
-				if cardsToPass[j] == card {
+			for _, cardToPass := range cardsToPass {
+				if cardToPass == heldCard {
 					toRemove = true
 				}
 			}
 
 			if !toRemove {
-				newHeld = append(newHeld, card)
+				newHeld = append(newHeld, heldCard)
 			}
 		}
 
@@ -207,14 +206,7 @@ func play(doPassCards passCardFn, doPlayCard playCardFn) {
 	ticket := response.Ticket
 	if ticket != nil {
 		fmt.Println("playing")
-		gameInfo, ex, err := client.GetGameInfo(ticket)
-		if err != nil {
-			fmt.Println("Error", err)
-			return
-		}
-		if ex != nil {
-			fmt.Println("Exception", ex)
-		}
+		gameInfo, _, _ := client.GetGameInfo(ticket)
 		fmt.Println("game info:", gameInfo)
 
 		game := Game{info: gameInfo}

@@ -47,6 +47,8 @@ func playCard(trick *Trick) *AgentVsAgent.Card {
 	return play.card.Card
 }
 
+// maybe be evaluate round... to determine the value of a round given the state of everything.
+// that way, the pass cards logic can use evaluate round to determine position
 func evaluateTrick(cards []*AgentVsAgent.Card, trick *Trick, evalCh chan PlayEvaluation) {
 	for _, card := range cards {
 		go func(card Card) {
