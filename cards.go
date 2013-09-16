@@ -9,7 +9,7 @@ type Card struct {
 	*AgentVsAgent.Card
 }
 
-func (card Card) order() int8 {
+func (card Card) order() int {
 	rank := card.Rank
 	switch rank {
 	case AgentVsAgent.Rank_TWO: return 1
