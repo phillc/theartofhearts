@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 	"./lib/AgentVsAgent"
-  // "fmt"
+  "fmt"
 )
 
 type PlayEvaluation struct {
@@ -32,55 +32,87 @@ func playCard(trick *Trick) *AgentVsAgent.Card {
 		}
 	}
 
-	trick.log("Number of evaluations:", len(evaluations))
-	var play PlayEvaluation
+	trick.log("Number of evaluations:", len(evaluations), evaluations)
+	var play *PlayEvaluation
 	for _, evaluation := range evaluations {
 		trick.log("eval:", evaluation.card, evaluation.value)
-		if evaluation.value >= play.value {
+		if play == nil || evaluation.value >= play.value {
 			trick.log("winning evaluation")
-			play = evaluation
+			play = new(PlayEvaluation)
+			*play = evaluation
 		}
-		trick.log("current play:", play)
+		trick.log("current play:", *play)
 	}
 
 	return play.card.Card
 }
 
-// maybe be evaluate round... to determine the value of a round given the state of everything.
-// that way, the pass cards logic can use evaluate round to determine position
 func evaluateTrick(trick *Trick, evalCh chan PlayEvaluation) int {
 	game := trick.round.game
+	position := (Position)(game.info.Position)
 	gameState := buildGameState(game)
 	cards := playableCards(trick)
 	for _, card := range cards {
 		go func(card Card) {
-			evalCh <- PlayEvaluation{card, evaluatePlay(*gameState, &card, trick)}
+			evalCh <- PlayEvaluation{card, evaluatePlay(gameState, position, card)}
 		} (Card{card})
 	}
 	return len(cards)
 }
 
-func evaluatePlay(gameState GameState, card *Card, trick *Trick) int {
-	// position := (Position)(game.info.Position)
-	trick.log("evaluating play of", card)
-	return card.order()
+func evaluatePlay(gameState GameState, position Position, card Card) int {
+	fmt.Println(">>>>>>>>>>evaluating play of", card)
+	fmt.Println("was:", card.order())
+
+	/*fmt.Println("pre ???", gameState.round.players[position].held[card])*/
+	/*fmt.Println("pre ref:", &gameState.round)*/
+	/*fmt.Println("pre gs:", gameState.round.players)*/
+	fmt.Println("pre now:", gameState.evaluate(position))
+
+	newGameState := gameState.play(position, card)
+
+	/*fmt.Println("???", gameState.round.players[position].held[card])*/
+	/*fmt.Println("ref:", &gameState.round)*/
+	/*fmt.Println("gs:", gameState.round.players)*/
+	fmt.Println("now:", gameState.evaluate(position))
+
+	/*fmt.Println("new gs:", newGameState.round.players)*/
+	/*fmt.Println("new ref:", &gameState.round)*/
+	/*fmt.Println("new???", newGameState.round.players[position].held[card])*/
+	fmt.Println("new now:", newGameState.evaluate(position))
+	return newGameState.evaluate(position)
 }
 
-func buildGameState(game *Game) *GameState {
+func buildGameState(game *Game) GameState {
 	var scores map[Position]int
 	roundState := buildRoundState(game.rounds[len(game.rounds) - 1])
-	return &GameState{ round: roundState, scores: scores }
+	return GameState{ round: roundState, scores: scores }
 }
 
-func buildRoundState(round *Round) *RoundState {
+func buildRoundState(round *Round) RoundState {
+	players := buildPlayerStates(round)
 	trickState := buildTrickState(round.tricks[len(round.tricks) - 1])
-	return &RoundState{ trick: trickState }
+	return RoundState{ trick: trickState, players: players }
 }
 
-func buildTrickState(trick *Trick) *TrickState {
-	var cards Cards
-	for _, aCard := range trick.played {
-		cards = append(cards, &Card{aCard})
+func buildPlayerStates(round *Round) map[Position]PlayerState {
+	rootPosition := (Position)(round.game.info.Position)
+	players := make(map[Position]PlayerState, 4)
+	cards := make(map[Card]CardMetadata, 13)
+
+	for _, aCard := range round.held {
+		cards[Card{aCard}] = CardMetadata{ played: false, cantOwn: false }
 	}
-	return &TrickState{ leader: (Position)(trick.leader), played: cards }
+	rootPlayerState := PlayerState{ held: cards }
+
+	players[rootPosition] = rootPlayerState
+	return players
+}
+
+func buildTrickState(trick *Trick) TrickState {
+	var playedCards Cards
+	for _, aCard := range trick.played {
+		playedCards = append(playedCards, &Card{aCard})
+	}
+	return TrickState{ leader: (Position)(trick.leader), played: playedCards }
 }
