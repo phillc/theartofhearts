@@ -97,7 +97,7 @@ func doPassCards(round Round) []*AgentVsAgent.Card {
 }
 
 func doPlayCard(trick Trick) *AgentVsAgent.Card {
-	trick.log("Current trick:", trick)
+	trick.log("Current trick:", trick.number, &trick.round, trick.leader, trick.played)
 	cardToPlay := playCard(&trick)
 	trick.log("Playing card:", cardToPlay)
 	return cardToPlay

@@ -31,10 +31,39 @@ func (card Card) order() int {
 	return 0
 }
 
+func (card Card) score() int {
+	value := 0
+	if card.Suit == AgentVsAgent.Suit_HEARTS {
+		value = 1
+	} else if card.Suit == AgentVsAgent.Suit_SPADES && card.Rank == AgentVsAgent.Rank_QUEEN {
+		value = 13
+	}
+	return value
+}
+
 type Cards []*Card
 
 func (s Cards) Len() int { return len(s) }
 func (s Cards) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+func (s Cards) allOfSuit(suit AgentVsAgent.Suit) Cards {
+	newCards := Cards{}
+	for _, card := range s {
+		if card.Suit == suit {
+			newCards = append(newCards, card)
+		}
+	}
+	return newCards
+}
+
+func (s Cards) indexOf(card *Card) int {
+	for i, aCard := range s {
+		if card == aCard {
+			return i
+		}
+	}
+	return -1
+}
 
 type ByOrder struct{ Cards }
 func (s ByOrder) Less(i, j int) bool { return s.Cards[i].order() < s.Cards[j].order() }
