@@ -81,36 +81,3 @@ func evaluatePlay(gameState GameState, position Position, card Card) int {
 	return newGameState.evaluate(position)
 }
 
-func buildGameState(game *Game) GameState {
-	var scores map[Position]int
-	roundState := buildRoundState(game.rounds[len(game.rounds) - 1])
-	return GameState{ round: roundState, scores: scores }
-}
-
-func buildRoundState(round *Round) RoundState {
-	players := buildPlayerStates(round)
-	trickState := buildTrickState(round.tricks[len(round.tricks) - 1])
-	return RoundState{ trick: trickState, players: players }
-}
-
-func buildPlayerStates(round *Round) map[Position]PlayerState {
-	rootPosition := (Position)(round.game.info.Position)
-	players := make(map[Position]PlayerState, 4)
-	cards := make(map[Card]CardMetadata, 13)
-
-	for _, aCard := range round.held {
-		cards[Card{aCard}] = CardMetadata{ played: false, cantOwn: false }
-	}
-	rootPlayerState := PlayerState{ held: cards }
-
-	players[rootPosition] = rootPlayerState
-	return players
-}
-
-func buildTrickState(trick *Trick) TrickState {
-	var playedCards Cards
-	for _, aCard := range trick.played {
-		playedCards = append(playedCards, &Card{aCard})
-	}
-	return TrickState{ leader: (Position)(trick.leader), played: playedCards }
-}
