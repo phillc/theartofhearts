@@ -7,13 +7,6 @@ import (
 
 type Position string
 
-type Player interface {
-}
-
-type MyTrick struct {
-	*Trick
-}
-
 type TrickState struct {
 	leader Position
 	played Cards
@@ -28,13 +21,13 @@ func (trickState *TrickState) evaluate(position Position) int {
 	} else {
 		evaluation = evaluation + (trickState.score() * 3)
 	}
-	fmt.Println("TRICK STATE EVALUATED AT", evaluation)
+	fmt.Println("trick eval", evaluation)
 	return evaluation
 }
 
 func (trickState *TrickState) winner() Position {
 	matchingSuit := trickState.played.allOfSuit(trickState.played[0].Suit)
-	sort.Sort(ByOrder{matchingSuit})
+	sort.Sort(sort.Reverse(ByOrder{matchingSuit}))
 	winningCard := matchingSuit[0]
 	winningCardIndex := trickState.played.indexOf(winningCard)
 	return trickState.positionsFromLeader()[winningCardIndex]
@@ -107,16 +100,23 @@ func (gameState *GameState) evaluate(position Position) int {
 func (gameState *GameState) play(position Position, card Card) *GameState {
 	fmt.Println("calculating game state")
 
-	fmt.Println("1>>>>>>>?????", gameState.round.players[position].held[card])
+	// fmt.Println("1>>>>>>>?????", gameState.round.players[position].held[card])
 	newMeta := new(CardMetadata)
 	*newMeta = gameState.round.players[position].held[card]
 	(*newMeta).played = true
 
 	newHeld := make(map[Card]CardMetadata, 13)
-	for heldCard, meta := range gameState.round.players[position].held{
+	for heldCard, meta := range gameState.round.players[position].held {
 		newHeld[heldCard] = meta
 	}
 	newHeld[card] = *newMeta
+
+	newPlayed := new(Cards)
+	*newPlayed = append(gameState.round.trick.played, &card)
+
+	newTrick := new(TrickState)
+	*newTrick = gameState.round.trick
+	(*newTrick).played = *newPlayed
 
 	newPlayerState := new(PlayerState)
 	*newPlayerState = gameState.round.players[position]
@@ -131,12 +131,13 @@ func (gameState *GameState) play(position Position, card Card) *GameState {
 	newRound := new(RoundState)
 	*newRound = gameState.round
 	(*newRound).players = newPlayers
+	(*newRound).trick = *newTrick
 
 	newGameState := new(GameState)
 	*newGameState = *gameState
 	(*newGameState).round = *newRound
 
-	fmt.Println("7>>>>>>>?????", gameState.round.players[position].held[card])
+	// fmt.Println("7>>>>>>>?????", gameState.round.players[position].held[card])
 
 	return newGameState
 }
