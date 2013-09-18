@@ -46,14 +46,44 @@ type Cards []*Card
 func (s Cards) Len() int { return len(s) }
 func (s Cards) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 
-func (s Cards) allOfSuit(suit AgentVsAgent.Suit) Cards {
+func (cards *Cards) allOfSuit(suit AgentVsAgent.Suit) Cards {
 	newCards := Cards{}
-	for _, card := range s {
+	for _, card := range *cards {
 		if card.Suit == suit {
 			newCards = append(newCards, card)
 		}
 	}
 	return newCards
+}
+
+func (cards *Cards) onlyTwoClubs() Cards {
+	matchedCards := Cards{}
+	for _, card := range *cards {
+		if card.Suit == AgentVsAgent.Suit_CLUBS && card.Rank == AgentVsAgent.Rank_TWO {
+			matchedCards = append(matchedCards, card)
+		}
+	}
+	return matchedCards
+}
+
+func (cards *Cards) noHearts() Cards {
+	matchedCards := Cards{}
+	for _, card := range *cards {
+		if card.Suit != AgentVsAgent.Suit_HEARTS {
+			matchedCards = append(matchedCards, card)
+		}
+	}
+	return matchedCards
+}
+
+func (cards *Cards) noPoints() Cards {
+	matchedCards := Cards{}
+	for _, card := range cards.noHearts() {
+		if !(card.Suit == AgentVsAgent.Suit_SPADES && card.Rank == AgentVsAgent.Rank_QUEEN) {
+			matchedCards = append(matchedCards, card)
+		}
+	}
+	return matchedCards
 }
 
 func (s Cards) indexOf(card *Card) int {

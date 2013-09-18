@@ -6,4 +6,3 @@ cabal-dev
 *.chi
 *.chs.h
 .virthualenv
-output.txt

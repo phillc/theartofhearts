@@ -15,8 +15,11 @@ func playCard(trick *Trick) *AgentVsAgent.Card {
 	timeout := time.After(800 * time.Millisecond)
 	evalCh := make(chan PlayEvaluation)
 	evaluations := make(map[Card]PlayEvaluation)
+	game := trick.round.game
+	position := (Position)(game.info.Position)
+	gameState := buildGameState(game)
 
-	numEvals := evaluateTrick(trick, evalCh)
+	numEvals := evaluatePlays(gameState, position, evalCh)
 
 	for i := 0; i < numEvals; i++ {
 		trick.log("Waiting for an evaluation")
@@ -45,20 +48,18 @@ func playCard(trick *Trick) *AgentVsAgent.Card {
 	return play.card.Card
 }
 
-func evaluateTrick(trick *Trick, evalCh chan PlayEvaluation) int {
-	game := trick.round.game
-	position := (Position)(game.info.Position)
-	gameState := buildGameState(game)
-	cards := playableCards(trick)
+func evaluatePlays(gameState *GameState, position Position, evalCh chan PlayEvaluation) int {
+	cards := gameState.currentRound().playableCards()
+	fmt.Println(">>> PLAYABLE CARDS:", cards)
 	for _, card := range cards {
 		go func(card Card) {
 			evalCh <- PlayEvaluation{card, evaluatePlay(gameState, position, card)}
-		} (Card{card})
+		} (*card)
 	}
 	return len(cards)
 }
 
-func evaluatePlay(gameState GameState, position Position, card Card) int {
+func evaluatePlay(gameState *GameState, position Position, card Card) int {
 	fmt.Println(">>>>>>>>>>evaluating play of", card)
 	// fmt.Println("was:", card.order())
 
