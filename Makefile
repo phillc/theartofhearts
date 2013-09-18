@@ -6,3 +6,6 @@ install:
 
 test:
 	go test
+
+run:
+	time rake agents[1] &>logs/output.txt; tail -n 5 logs/output.txt

@@ -61,24 +61,7 @@ func evaluatePlays(gameState *GameState, position Position, evalCh chan PlayEval
 
 func evaluatePlay(gameState *GameState, position Position, card Card) int {
 	fmt.Println(">>>>>>>>>>evaluating play of", card)
-	// fmt.Println("was:", card.order())
-
-	/*fmt.Println("pre ???", gameState.round.players[position].held[card])*/
-	/*fmt.Println("pre ref:", &gameState.round)*/
-	/*fmt.Println("pre gs:", gameState.round.players)*/
-	// fmt.Println("pre now:", gameState.evaluate(position))
-
 	newGameState := gameState.play(position, card)
-
-	/*fmt.Println("???", gameState.round.players[position].held[card])*/
-	/*fmt.Println("ref:", &gameState.round)*/
-	/*fmt.Println("gs:", gameState.round.players)*/
-	// fmt.Println("now:", gameState.evaluate(position))
-
-	/*fmt.Println("new gs:", newGameState.round.players)*/
-	/*fmt.Println("new ref:", &gameState.round)*/
-	/*fmt.Println("new???", newGameState.round.players[position].held[card])*/
-	// fmt.Println("new now:", newGameState.evaluate(position))
 	return newGameState.evaluate(position)
 }
 

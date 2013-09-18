@@ -91,12 +91,29 @@ func (playerState *PlayerState) clone() *PlayerState {
 
 type RoundState struct {
 	number int
-	playerStates map[Position]PlayerState
+	north PlayerState
+	east PlayerState
+	south PlayerState
+	west PlayerState
 	trickStates []TrickState
 }
 
+func (roundState *RoundState) playerState(position Position) *PlayerState {
+	switch string(position) {
+	case "north": return &roundState.north
+	case "east": return &roundState.east
+	case "south": return &roundState.south
+	case "west": return &roundState.west
+	}
+	return &PlayerState{}
+}
+
 func (roundState *RoundState) currentTrick() *TrickState {
-	return &roundState.trickStates[len(roundState.trickStates) - 1]
+	var trickState *TrickState
+	if len(roundState.trickStates) > 0 {
+		trickState = &roundState.trickStates[len(roundState.trickStates) - 1]
+	}
+	return trickState
 }
 
 func (roundState *RoundState) isHeartsBroken() bool {
@@ -116,7 +133,7 @@ func (roundState *RoundState) isHeartsBroken() bool {
 func (roundState *RoundState) playableCards() Cards {
 	position := roundState.currentTrick().positionsMissing()[0]
 	held := Cards{}
-	for card, _ := range roundState.playerStates[position].held {
+	for card, _ := range roundState.playerState(position).held {
 		newCard := card
 		held = append(held, &newCard)
 	}
@@ -157,7 +174,7 @@ func (roundState *RoundState) evaluate(position Position) int {
 	// or something that promotes lower cards (2 + K > 7)? or is it?
 	// how about (sum / len) - (len * 3)
 
-	for card, meta := range roundState.playerStates[position].held {
+	for card, meta := range roundState.playerState(position).held {
 		if !meta.played {
 			if card.Suit == AgentVsAgent.Suit_CLUBS && card.Rank == AgentVsAgent.Rank_TWO {
 				handScore = handScore - 13
@@ -168,7 +185,9 @@ func (roundState *RoundState) evaluate(position Position) int {
 	}
 	evaluation = evaluation + handScore
 
-	evaluation = evaluation + roundState.currentTrick().evaluate(position)
+	if roundState.currentTrick() != nil {
+		evaluation = evaluation + roundState.currentTrick().evaluate(position)
+	}
 
 	return evaluation
 }
@@ -179,14 +198,12 @@ func (roundState *RoundState) clone() *RoundState {
 	  newTrickStates = append(newTrickStates, *trickState.clone())
 	}
 
-	newPlayerStates := make(map[Position]PlayerState)
-	for position, playerState := range roundState.playerStates {
-    newPlayerStates[position] = *playerState.clone()
-	}
-
 	newRoundState := *roundState
 	newRoundState.trickStates = newTrickStates
-	newRoundState.playerStates = newPlayerStates
+	newRoundState.north = *roundState.north.clone()
+	newRoundState.east = *roundState.east.clone()
+	newRoundState.south = *roundState.south.clone()
+	newRoundState.west = *roundState.west.clone()
 	return &newRoundState
 }
 
@@ -222,19 +239,22 @@ func (gameState *GameState) play(position Position, card Card) *GameState {
 	newGameState := gameState.clone()
 	currentRound := newGameState.currentRound()
 
-	playerState := currentRound.playerStates[position]
+	playerState := currentRound.playerState(position)
 	held := playerState.held
 	meta := held[card]
 	meta.played = true
 	held[card] = meta
-	playerState.held[card] = meta
-	currentRound.playerStates[position] = playerState
+	currentRound.playerState(position).held[card] = meta
 
 	currentTrick := currentRound.currentTrick()
 	currentTrick.played = append(currentTrick.played, &card)
 
 	// fmt.Println("after>>>>>>>?????", gameState.currentRound().currentTrick().played)
 	return newGameState
+}
+
+func (gameState *GameState) pass(position Position, cards Cards) *GameState {
+	return gameState
 }
 
 func buildGameState(game *Game) *GameState {
@@ -251,7 +271,14 @@ func buildRoundState(round *Round) *RoundState {
 	for _, trick := range round.tricks {
 		trickStates = append(trickStates, *buildTrickState(trick))
 	}
-	return &RoundState{ number: round.number, trickStates: trickStates, playerStates: players }
+	return &RoundState{
+		number: round.number,
+		trickStates: trickStates,
+		north: players["north"],
+		east: players["east"],
+		south: players["south"],
+		west: players["west"],
+	}
 }
 
 func buildPlayerStates(round *Round) map[Position]PlayerState {

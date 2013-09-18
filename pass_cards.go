@@ -1,45 +1,98 @@
 package main
 
 import (
-	// "time"
+	"time"
 	"./lib/AgentVsAgent"
 	"fmt"
 	"sort"
 )
 
 
-// evaluate permutations of three cards
+type PassEvaluation struct {
+	number int
+	cards Cards
+	value int
+}
 
 func passCards(round Round) []*AgentVsAgent.Card {
+	fmt.Println("passing cards")
+	timeout := time.After(800 * time.Millisecond)
+	evalCh := make(chan PassEvaluation)
+	evaluations := make(map[int]PassEvaluation)
 	game := round.game
-	gameState := buildGameState(game)
 	position := (Position)(game.info.Position)
+	gameState := buildGameState(game)
 
-	var heldCards Cards
-	for heldCard, _ := range gameState.currentRound().playerStates[position].held {
-		heldCards = append(heldCards, &heldCard)
+	numEvals := evaluatePasses(gameState, position, evalCh)
+
+	for i := 0; i < numEvals; i++ {
+		round.log("Waiting for a pass evaluation")
+		select {
+		case passEval := <-evalCh:
+			round.log("Cards", passEval.cards, "evaluated at", passEval.value)
+			evaluations[passEval.number] = passEval
+		case <- timeout:
+			round.log("*****Timeout*****")
+			round.log("*****Timeout*****")
+			round.log("*****Timeout*****")
+			break
+		}
 	}
-	fmt.Println("HELD CARDS", heldCards)
+
+	round.log("Number of evaluations:", len(evaluations), evaluations)
+	var pass *PassEvaluation
+	for _, evaluation := range evaluations {
+		round.log("eval:", evaluation.cards, evaluation.value)
+		if pass == nil || evaluation.value >= pass.value {
+			pass = new(PassEvaluation)
+			*pass = evaluation
+		}
+	}
+
+	var cardsToPass []*AgentVsAgent.Card
+	for _, card := range pass.cards {
+		cardsToPass = append(cardsToPass, card.Card)
+	}
+
+	return cardsToPass
+
+	// Whatever modification to the state after passing needs to create the first trick, with two of clubs
+
+}
+
+func evaluatePasses(gameState *GameState, position Position, evalCh chan PassEvaluation) int {
+	var heldCards Cards
+	for heldCard, _ := range gameState.currentRound().playerState(position).held {
+		newCard := heldCard
+		heldCards = append(heldCards, &newCard)
+	}
+
+	// too many combos right now, filter some out
+	sort.Sort(sort.Reverse(ByOrder{heldCards}))
+	heldCards = heldCards[0:4]
 
 	var combinations []*Cards
-	for i := 0; i < 13; i++ {
-		for j := 1; i < 13; i++ {
-			for k := 2; i < 13; i++ {
-				combinations = append(combinations, &Cards{heldCards[i], heldCards[j], heldCards[k]})
+	length := len(heldCards)
+	for i := 0; i < length; i++ {
+		for j := 0; j < length; j++ {
+			for k := 0; k < length; k++ {
+				if i != j && j != k && i != k {
+					combinations = append(combinations, &Cards{heldCards[i], heldCards[j], heldCards[k]})
+				}
 			}
 		}
 	}
-	// Whatever modification to the state after passing needs to create the first trick, with two of clubs
 
-	var cards Cards
-	for _, card := range round.dealt {
-		cards = append(cards, &Card{card})
+	for number, cards := range combinations {
+		go func(number int, cards Cards) {
+			evalCh <- PassEvaluation{number, cards, evaluatePass(gameState, position, cards)}
+		} (number, *cards)
 	}
-	sort.Sort(sort.Reverse(ByOrder{cards}))
-	var cardsToPass []*AgentVsAgent.Card
-	for _, card := range cards[0:3] {
-		cardsToPass = append(cardsToPass, card.Card)
-	}
-	return cardsToPass
+	return len(combinations)
 }
 
+func evaluatePass(gameState *GameState, position Position, cards Cards) int {
+	fmt.Println(">>>>>>>>>>evaluating pass of", cards)
+	newGameState := gameState.pass(position, cards)
+	return newGameState.evaluate(position)
+}
