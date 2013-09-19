@@ -71,7 +71,8 @@ func (trickState *TrickState) clone() *TrickState {
 
 type CardMetadata struct {
 	played bool
-	cantOwn bool
+	//dealt bool
+	passed bool
 }
 
 type PlayerState struct {
@@ -232,6 +233,19 @@ func (gameState *GameState) clone() *GameState {
 	return &newGameState
 }
 
+func (gameState *GameState) pass(position Position, cards Cards) *GameState {
+	newGameState := gameState.clone()
+	currentRound := newGameState.currentRound()
+	playerState := currentRound.playerState(position)
+	held := playerState.held
+	card := *cards[0]
+	meta := held[card]
+	meta.passed = true
+	held[card] = meta
+	currentRound.playerState(position).held[card] = meta
+	return newGameState
+}
+
 func (gameState *GameState) play(position Position, card Card) *GameState {
 	fmt.Println("creating game state from play")
 	// fmt.Println("before>>>>>>>?????", gameState.currentRound().currentTrick().played)
@@ -251,10 +265,6 @@ func (gameState *GameState) play(position Position, card Card) *GameState {
 
 	// fmt.Println("after>>>>>>>?????", gameState.currentRound().currentTrick().played)
 	return newGameState
-}
-
-func (gameState *GameState) pass(position Position, cards Cards) *GameState {
-	return gameState
 }
 
 func buildGameState(game *Game) *GameState {
@@ -287,7 +297,7 @@ func buildPlayerStates(round *Round) map[Position]PlayerState {
 	cards := make(map[Card]CardMetadata, 13)
 
 	for _, aCard := range round.held {
-		cards[Card{aCard}] = CardMetadata{ played: false, cantOwn: false }
+		cards[Card{aCard}] = CardMetadata{}
 	}
 	rootPlayerState := PlayerState{ held: cards }
 

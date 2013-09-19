@@ -5,7 +5,7 @@ import (
 	"./lib/AgentVsAgent"
 )
 
-func newGameState() GameState {
+func createGameState() GameState {
 	roundState := RoundState{}
 	roundState.north = PlayerState{ held: make(map[Card]CardMetadata) }
 	roundState.east = PlayerState{ held: make(map[Card]CardMetadata) }
@@ -17,7 +17,7 @@ func newGameState() GameState {
 }
 
 func TestPlay(t *testing.T) {
-	gameState := newGameState()
+	gameState := createGameState()
 	position := (Position)("south")
 
 	played := Cards{}
@@ -53,12 +53,24 @@ func TestPlay(t *testing.T) {
 
 func TestPass(t *testing.T) {
 	position := (Position)("south")
-	/*card := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_TWO } }*/
-	cards := Cards{}
+	card1 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_TWO } }
+	card2 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_THREE } }
+	card3 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_FOUR } }
+	/*card4 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_FIVE } }*/
+	/*card5 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_SIX } }*/
+	/*card6 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_SEVEN } }*/
 
-	gameState := newGameState()
+	passedCards := Cards{&card1, &card2, &card3}
 
-	gameState.pass(position, cards)
+	gameState := createGameState()
+
+	//heldCards := Cards{&card1, &card2, &card4, &card4, &card5, &card6}
+
+	newGameState := gameState.pass(position, passedCards)
+
+	if !newGameState.currentRound().south.held[card1].passed {
+		t.Error("card should have been marked as passed")
+	}
 
 	/*if len(gameState.currentRound().currentTrick().played) > 0 {*/
 	/*	t.Error("there should be no played cards")*/
