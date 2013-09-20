@@ -56,43 +56,28 @@ func TestPass(t *testing.T) {
 	card1 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_TWO } }
 	card2 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_THREE } }
 	card3 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_FOUR } }
-	/*card4 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_FIVE } }*/
-	/*card5 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_SIX } }*/
-	/*card6 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_SEVEN } }*/
+	card4 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_FIVE } }
+	card5 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_SIX } }
+	card6 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_SEVEN } }
 
-	passedCards := Cards{&card1, &card2, &card3}
+	dealtCards := Cards{&card1, &card2, &card3, &card4, &card5, &card6}
+	passedCards := dealtCards[0:3]
+	keptCards := dealtCards[3:3]
 
 	gameState := createGameState()
 
-	//heldCards := Cards{&card1, &card2, &card4, &card4, &card5, &card6}
-
 	newGameState := gameState.pass(position, passedCards)
 
-	if !newGameState.currentRound().south.held[card1].passed {
-		t.Error("card should have been marked as passed")
+	for _, passedCard := range passedCards {
+		if !newGameState.currentRound().south.held[*passedCard].passed {
+			t.Error("card should have been marked as passed")
+		}
 	}
 
-	/*if len(gameState.currentRound().currentTrick().played) > 0 {*/
-	/*	t.Error("there should be no played cards")*/
-	/*}*/
-	/*if gameState.currentRound().playerStates[position].held[card].played == true {*/
-	/*	t.Error("the card should not be played")*/
-	/*}*/
-
-	/*newGameState := gameState.play(position, card)*/
-
-	/*if len(gameState.currentRound().currentTrick().played) > 0 {*/
-	/*	t.Error("there should still be no played cards in the original")*/
-	/*}*/
-	/*if gameState.currentRound().playerStates[position].held[card].played == true {*/
-	/*	t.Error("the card should still not be played in the original")*/
-	/*}*/
-
-	/*if len(newGameState.currentRound().currentTrick().played) != 1 {*/
-	/*	t.Error("newGameState should have the played card")*/
-	/*}*/
-	/*if newGameState.currentRound().playerStates[position].held[card].played != true {*/
-	/*	t.Error("newGameState should have the card marked as played")*/
-	/*}*/
+	for _, keptCard := range keptCards {
+		if newGameState.currentRound().south.held[*keptCard].passed {
+			t.Error("kept card should not have been marked as passed")
+		}
+	}
 }
 

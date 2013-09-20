@@ -70,11 +70,13 @@ func (trickState *TrickState) clone() *TrickState {
 }
 
 type CardMetadata struct {
-	played bool
 	//dealt bool
+	played bool
 	passed bool
+	received bool
 }
 
+// Uhh... is this needed? why not go staight to the map?
 type PlayerState struct {
 	held map[Card]CardMetadata
 }
@@ -238,11 +240,11 @@ func (gameState *GameState) pass(position Position, cards Cards) *GameState {
 	currentRound := newGameState.currentRound()
 	playerState := currentRound.playerState(position)
 	held := playerState.held
-	card := *cards[0]
-	meta := held[card]
-	meta.passed = true
-	held[card] = meta
-	currentRound.playerState(position).held[card] = meta
+	for _, passedCard := range cards {
+		meta := held[*passedCard]
+		meta.passed = true
+		held[*passedCard] = meta
+	}
 	return newGameState
 }
 
