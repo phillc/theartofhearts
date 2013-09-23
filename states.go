@@ -28,7 +28,7 @@ func (trickState *TrickState) evaluate(position Position) int {
 }
 
 func (trickState *TrickState) winner() Position {
-	matchingSuit := trickState.played.allOfSuit(trickState.played[0].Suit)
+	matchingSuit := trickState.played.allOfSuit(trickState.played[0].suit)
 	sort.Sort(sort.Reverse(ByOrder{matchingSuit}))
 	winningCard := matchingSuit[0]
 	winningCardIndex := trickState.played.indexOf(winningCard)
@@ -140,7 +140,7 @@ func (roundState *RoundState) isHeartsBroken() bool {
 	for _, trick := range roundState.trickStates {
 		cards := trick.played
 		for _, card := range cards {
-			if card.Suit == AgentVsAgent.Suit_HEARTS {
+			if card.suit == AgentVsAgent.Suit_HEARTS {
 				broken = true
 				break
 			}
@@ -169,7 +169,7 @@ func (roundState *RoundState) playableCards() Cards {
 	}
 
 	if !trick.isLeading() {
-		newValidCards := validCards.allOfSuit(trick.played[0].Suit)
+		newValidCards := validCards.allOfSuit(trick.played[0].suit)
 		if len(newValidCards) > 0 {
 			validCards = newValidCards
 		}
@@ -180,15 +180,28 @@ func (roundState *RoundState) playableCards() Cards {
 }
 
 func (roundState *RoundState) probabilities() map[Position]map[Card]int {
-	/*positions := []Position{"north", "east", "south", "west"}*/
+	positions := []Position{"north", "east", "south", "west"}
 	probabilities := make(map[Position]map[Card]int, 4)
 
-	/*cards := allCards()*/
-	/*for _, card := range cards {*/
-	/*	for _, position := range positions {*/
-	/*		if roundState.playerState(position).held[card].*/
-	/*	}*/
-	/*}*/
+	for _, position := range positions {
+		probabilities[position] = make(map[Card]int)
+	}
+
+	cards := allCards()
+	for _, card := range cards {
+		for _, position := range positions {
+			actions := roundState.playerState(position).actions[*card]
+			if actions.isHeld() {
+				probabilities[position][*card] = 100
+				for _, otherPosition := range positions {
+					if otherPosition != position {
+						probabilities[otherPosition][*card] = 0
+					}
+				}
+				break
+			}
+		}
+	}
 
 	return probabilities
 }
@@ -204,7 +217,7 @@ func (roundState *RoundState) evaluate(position Position) int {
 
 	for card, action := range roundState.playerState(position).actions {
 		if action.isHeld() {
-			if card.Suit == AgentVsAgent.Suit_CLUBS && card.Rank == AgentVsAgent.Rank_TWO {
+			if card.suit == AgentVsAgent.Suit_CLUBS && card.rank == AgentVsAgent.Rank_TWO {
 				handScore = handScore - 13
 			} else {
 				handScore = handScore - card.order()
@@ -324,18 +337,20 @@ func buildPlayerStates(round *Round) map[Position]PlayerState {
 	cards := make(map[Card]Action, 13)
 
 	for _, aCard := range round.dealt {
-		actions := cards[Card{aCard}]
+		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
+		actions := cards[card]
 		actions.dealt = true
 		actions.passed = true // then mark it not passed below
-		cards[Card{aCard}] = actions
+		cards[card] = actions
 	}
 	for _, aCard := range round.held {
-		actions := cards[Card{aCard}]
+		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
+		actions := cards[card]
 		actions.passed = false
 		if !actions.dealt {
 			actions.received = true
 		}
-		cards[Card{aCard}] = actions
+		cards[card] = actions
 	}
 	rootPlayerState := PlayerState{ actions: cards }
 
@@ -346,7 +361,7 @@ func buildPlayerStates(round *Round) map[Position]PlayerState {
 func buildTrickState(trick *Trick) *TrickState {
 	var playedCards Cards
 	for _, aCard := range trick.played {
-		playedCards = append(playedCards, &Card{aCard})
+		playedCards = append(playedCards, &Card{ suit: aCard.Suit, rank: aCard.Rank })
 	}
 	return &TrickState{ number: trick.number, leader: (Position)(trick.leader), played: playedCards }
 }

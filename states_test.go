@@ -24,8 +24,7 @@ func TestPlay(t *testing.T) {
 	trickState := TrickState{ leader: position, played: played }
 	trickStates := []TrickState{ trickState }
 	gameState.currentRound().trickStates = trickStates
-	card := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_TWO } }
-
+	card := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
 
 	if len(gameState.currentRound().currentTrick().played) > 0 {
 		t.Error("there should be no played cards")
@@ -53,12 +52,12 @@ func TestPlay(t *testing.T) {
 
 func TestPass(t *testing.T) {
 	position := (Position)("south")
-	card1 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_TWO } }
-	card2 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_THREE } }
-	card3 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_FOUR } }
-	card4 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_FIVE } }
-	card5 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_SIX } }
-	card6 := Card{ &AgentVsAgent.Card{ Suit: AgentVsAgent.Suit_HEARTS, Rank: AgentVsAgent.Rank_SEVEN } }
+	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
+	card2 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_THREE }
+	card3 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_FOUR }
+	card4 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_FIVE }
+	card5 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_SIX }
+	card6 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_SEVEN }
 
 	dealtCards := Cards{&card1, &card2, &card3, &card4, &card5, &card6}
 	passedCards := dealtCards[0:3]
@@ -80,4 +79,24 @@ func TestPass(t *testing.T) {
 		}
 	}
 }
+
+func TestProbabilities(t *testing.T) {
+	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
+
+	gameState := createGameState()
+	actions := gameState.currentRound().south.actions[card1]
+	actions.received = true
+	gameState.currentRound().south.actions[card1] = actions
+
+	probabilities := gameState.currentRound().probabilities()
+
+	cardProbability := probabilities["south"][card1]
+	if cardProbability != 100 {
+		t.Error("Card should be there", cardProbability)
+	}
+	if probabilities["north"][card1] != 0 {
+		t.Error("Card shouldn't be elsewhere")
+	}
+}
+
 

@@ -51,7 +51,7 @@ func passCards(round Round) []*AgentVsAgent.Card {
 
 	var cardsToPass []*AgentVsAgent.Card
 	for _, card := range pass.cards {
-		cardsToPass = append(cardsToPass, card.Card)
+		cardsToPass = append(cardsToPass, card.toAvA())
 	}
 
 	return cardsToPass

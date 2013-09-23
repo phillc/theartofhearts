@@ -6,11 +6,17 @@ import (
 )
 
 type Card struct {
-	*AgentVsAgent.Card
+	suit AgentVsAgent.Suit
+	rank AgentVsAgent.Rank
+}
+
+func (card Card) toAvA() *AgentVsAgent.Card {
+	avaCard := AgentVsAgent.Card{ Suit: card.suit, Rank: card.rank }
+	return &avaCard
 }
 
 func (card Card) order() int {
-	rank := card.Rank
+	rank := card.rank
 	switch rank {
 	case AgentVsAgent.Rank_TWO: return 1
 	case AgentVsAgent.Rank_THREE: return 2
@@ -33,9 +39,9 @@ func (card Card) order() int {
 
 func (card Card) score() int {
 	value := 0
-	if card.Suit == AgentVsAgent.Suit_HEARTS {
+	if card.suit == AgentVsAgent.Suit_HEARTS {
 		value = 1
-	} else if card.Suit == AgentVsAgent.Suit_SPADES && card.Rank == AgentVsAgent.Rank_QUEEN {
+	} else if card.suit == AgentVsAgent.Suit_SPADES && card.rank == AgentVsAgent.Rank_QUEEN {
 		value = 13
 	}
 	return value
@@ -49,7 +55,7 @@ func (s Cards) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (cards *Cards) allOfSuit(suit AgentVsAgent.Suit) Cards {
 	newCards := Cards{}
 	for _, card := range *cards {
-		if card.Suit == suit {
+		if card.suit == suit {
 			newCards = append(newCards, card)
 		}
 	}
@@ -59,7 +65,7 @@ func (cards *Cards) allOfSuit(suit AgentVsAgent.Suit) Cards {
 func (cards *Cards) onlyTwoClubs() Cards {
 	matchedCards := Cards{}
 	for _, card := range *cards {
-		if card.Suit == AgentVsAgent.Suit_CLUBS && card.Rank == AgentVsAgent.Rank_TWO {
+		if card.suit == AgentVsAgent.Suit_CLUBS && card.rank == AgentVsAgent.Rank_TWO {
 			matchedCards = append(matchedCards, card)
 		}
 	}
@@ -69,7 +75,7 @@ func (cards *Cards) onlyTwoClubs() Cards {
 func (cards *Cards) noHearts() Cards {
 	matchedCards := Cards{}
 	for _, card := range *cards {
-		if card.Suit != AgentVsAgent.Suit_HEARTS {
+		if card.suit != AgentVsAgent.Suit_HEARTS {
 			matchedCards = append(matchedCards, card)
 		}
 	}
@@ -79,7 +85,7 @@ func (cards *Cards) noHearts() Cards {
 func (cards *Cards) noPoints() Cards {
 	matchedCards := Cards{}
 	for _, card := range cards.noHearts() {
-		if !(card.Suit == AgentVsAgent.Suit_SPADES && card.Rank == AgentVsAgent.Rank_QUEEN) {
+		if !(card.suit == AgentVsAgent.Suit_SPADES && card.rank == AgentVsAgent.Rank_QUEEN) {
 			matchedCards = append(matchedCards, card)
 		}
 	}
@@ -120,7 +126,7 @@ func allCards() Cards {
 
 	for _, suit := range suits {
 		for _, rank := range ranks {
-			cards = append(cards, &Card{ &AgentVsAgent.Card{ Suit: suit, Rank: rank } })
+			cards = append(cards, &Card{ suit: suit, rank: rank })
 		}
 	}
 

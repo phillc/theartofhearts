@@ -45,7 +45,7 @@ func playCard(trick *Trick) *AgentVsAgent.Card {
 		}
 	}
 
-	return play.card.Card
+	return play.card.toAvA()
 }
 
 func evaluatePlays(gameState *GameState, position Position, evalCh chan PlayEvaluation) int {
