@@ -98,3 +98,31 @@ func (s Cards) indexOf(card *Card) int {
 type ByOrder struct{ Cards }
 func (s ByOrder) Less(i, j int) bool { return s.Cards[i].order() < s.Cards[j].order() }
 
+func allCards() Cards {
+	cards := Cards{}
+
+	suits := []AgentVsAgent.Suit{ AgentVsAgent.Suit_CLUBS, AgentVsAgent.Suit_DIAMONDS, AgentVsAgent.Suit_SPADES, AgentVsAgent.Suit_HEARTS }
+	ranks := []AgentVsAgent.Rank{
+		AgentVsAgent.Rank_TWO,
+		AgentVsAgent.Rank_THREE,
+		AgentVsAgent.Rank_FOUR,
+		AgentVsAgent.Rank_FIVE,
+		AgentVsAgent.Rank_SIX,
+		AgentVsAgent.Rank_SEVEN,
+		AgentVsAgent.Rank_EIGHT,
+		AgentVsAgent.Rank_NINE,
+		AgentVsAgent.Rank_TEN,
+		AgentVsAgent.Rank_JACK,
+		AgentVsAgent.Rank_QUEEN,
+		AgentVsAgent.Rank_KING,
+		AgentVsAgent.Rank_ACE,
+	}
+
+	for _, suit := range suits {
+		for _, rank := range ranks {
+			cards = append(cards, &Card{ &AgentVsAgent.Card{ Suit: suit, Rank: rank } })
+		}
+	}
+
+	return cards
+}

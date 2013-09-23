@@ -7,10 +7,10 @@ import (
 
 func createGameState() GameState {
 	roundState := RoundState{}
-	roundState.north = PlayerState{ held: make(map[Card]CardMetadata) }
-	roundState.east = PlayerState{ held: make(map[Card]CardMetadata) }
-	roundState.south = PlayerState{ held: make(map[Card]CardMetadata) }
-	roundState.west = PlayerState{ held: make(map[Card]CardMetadata) }
+	roundState.north = PlayerState{ actions: make(map[Card]Action) }
+	roundState.east = PlayerState{ actions: make(map[Card]Action) }
+	roundState.south = PlayerState{ actions: make(map[Card]Action) }
+	roundState.west = PlayerState{ actions: make(map[Card]Action) }
 	roundStates := []RoundState{ roundState }
 	gameState := GameState{ roundStates: roundStates }
 	return gameState
@@ -30,7 +30,7 @@ func TestPlay(t *testing.T) {
 	if len(gameState.currentRound().currentTrick().played) > 0 {
 		t.Error("there should be no played cards")
 	}
-	if gameState.currentRound().playerState(position).held[card].played == true {
+	if gameState.currentRound().playerState(position).actions[card].played == true {
 		t.Error("the card should not be played")
 	}
 
@@ -39,14 +39,14 @@ func TestPlay(t *testing.T) {
 	if len(gameState.currentRound().currentTrick().played) > 0 {
 		t.Error("there should still be no played cards in the original")
 	}
-	if gameState.currentRound().playerState(position).held[card].played == true {
+	if gameState.currentRound().playerState(position).actions[card].played == true {
 		t.Error("the card should still not be played in the original")
 	}
 
 	if len(newGameState.currentRound().currentTrick().played) != 1 {
 		t.Error("newGameState should have the played card")
 	}
-	if newGameState.currentRound().playerState(position).held[card].played != true {
+	if newGameState.currentRound().playerState(position).actions[card].played != true {
 		t.Error("newGameState should have the card marked as played")
 	}
 }
@@ -69,13 +69,13 @@ func TestPass(t *testing.T) {
 	newGameState := gameState.pass(position, passedCards)
 
 	for _, passedCard := range passedCards {
-		if !newGameState.currentRound().south.held[*passedCard].passed {
+		if !newGameState.currentRound().south.actions[*passedCard].passed {
 			t.Error("card should have been marked as passed")
 		}
 	}
 
 	for _, keptCard := range keptCards {
-		if newGameState.currentRound().south.held[*keptCard].passed {
+		if newGameState.currentRound().south.actions[*keptCard].passed {
 			t.Error("kept card should not have been marked as passed")
 		}
 	}

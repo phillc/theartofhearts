@@ -69,26 +69,42 @@ func (trickState *TrickState) clone() *TrickState {
 	return &newTrickState
 }
 
-type CardMetadata struct {
-	//dealt bool
+type Action struct {
+	dealt bool
 	played bool
 	passed bool
 	received bool
 }
 
+func (action *Action) isHeld() bool {
+	return !action.played && ((action.dealt && !action.passed) || action.received)
+}
+
+
 // Uhh... is this needed? why not go staight to the map?
 type PlayerState struct {
-	held map[Card]CardMetadata
+	actions map[Card]Action
+}
+
+func (playerState *PlayerState) held() Cards {
+	cards := Cards{}
+	for card, action := range playerState.actions {
+		if action.isHeld() {
+			aCard := card
+			cards = append(cards, &aCard)
+		}
+	}
+	return cards
 }
 
 func (playerState *PlayerState) clone() *PlayerState {
-	newHeld := make(map[Card]CardMetadata)
-	for card, meta := range playerState.held {
-		newHeld[card] = meta
+	newActions := make(map[Card]Action)
+	for card, action := range playerState.actions {
+		newActions[card] = action
 	}
 
 	newPlayerState := *playerState
-	newPlayerState.held = newHeld
+	newPlayerState.actions = newActions
 	return &newPlayerState
 }
 
@@ -135,15 +151,10 @@ func (roundState *RoundState) isHeartsBroken() bool {
 
 func (roundState *RoundState) playableCards() Cards {
 	position := roundState.currentTrick().positionsMissing()[0]
-	held := Cards{}
-	for card, _ := range roundState.playerState(position).held {
-		newCard := card
-		held = append(held, &newCard)
-	}
-
 	trick := roundState.currentTrick()
+	held := roundState.playerState(position).held()
 
-	validCards := held
+	validCards := roundState.playerState(position).held()
 
 	if trick.number == 1 && trick.isLeading() {
 		validCards = validCards.onlyTwoClubs()
@@ -168,6 +179,20 @@ func (roundState *RoundState) playableCards() Cards {
 	return validCards
 }
 
+func (roundState *RoundState) probabilities() map[Position]map[Card]int {
+	/*positions := []Position{"north", "east", "south", "west"}*/
+	probabilities := make(map[Position]map[Card]int, 4)
+
+	/*cards := allCards()*/
+	/*for _, card := range cards {*/
+	/*	for _, position := range positions {*/
+	/*		if roundState.playerState(position).held[card].*/
+	/*	}*/
+	/*}*/
+
+	return probabilities
+}
+
 func (roundState *RoundState) evaluate(position Position) int {
 	evaluation := 0
 	// evaluation = evaluation - roundState.scores[position]
@@ -177,8 +202,8 @@ func (roundState *RoundState) evaluate(position Position) int {
 	// or something that promotes lower cards (2 + K > 7)? or is it?
 	// how about (sum / len) - (len * 3)
 
-	for card, meta := range roundState.playerState(position).held {
-		if !meta.played {
+	for card, action := range roundState.playerState(position).actions {
+		if action.isHeld() {
 			if card.Suit == AgentVsAgent.Suit_CLUBS && card.Rank == AgentVsAgent.Rank_TWO {
 				handScore = handScore - 13
 			} else {
@@ -239,11 +264,11 @@ func (gameState *GameState) pass(position Position, cards Cards) *GameState {
 	newGameState := gameState.clone()
 	currentRound := newGameState.currentRound()
 	playerState := currentRound.playerState(position)
-	held := playerState.held
+	actions := playerState.actions
 	for _, passedCard := range cards {
-		meta := held[*passedCard]
-		meta.passed = true
-		held[*passedCard] = meta
+		action := actions[*passedCard]
+		action.passed = true
+		actions[*passedCard] = action
 	}
 	return newGameState
 }
@@ -256,11 +281,11 @@ func (gameState *GameState) play(position Position, card Card) *GameState {
 	currentRound := newGameState.currentRound()
 
 	playerState := currentRound.playerState(position)
-	held := playerState.held
-	meta := held[card]
-	meta.played = true
-	held[card] = meta
-	currentRound.playerState(position).held[card] = meta
+	actions := playerState.actions
+	action := actions[card]
+	action.played = true
+	actions[card] = action
+	currentRound.playerState(position).actions[card] = action
 
 	currentTrick := currentRound.currentTrick()
 	currentTrick.played = append(currentTrick.played, &card)
@@ -296,12 +321,23 @@ func buildRoundState(round *Round) *RoundState {
 func buildPlayerStates(round *Round) map[Position]PlayerState {
 	rootPosition := (Position)(round.game.info.Position)
 	players := make(map[Position]PlayerState, 4)
-	cards := make(map[Card]CardMetadata, 13)
+	cards := make(map[Card]Action, 13)
 
-	for _, aCard := range round.held {
-		cards[Card{aCard}] = CardMetadata{}
+	for _, aCard := range round.dealt {
+		actions := cards[Card{aCard}]
+		actions.dealt = true
+		actions.passed = true // then mark it not passed below
+		cards[Card{aCard}] = actions
 	}
-	rootPlayerState := PlayerState{ held: cards }
+	for _, aCard := range round.held {
+		actions := cards[Card{aCard}]
+		actions.passed = false
+		if !actions.dealt {
+			actions.received = true
+		}
+		cards[Card{aCard}] = actions
+	}
+	rootPlayerState := PlayerState{ actions: cards }
 
 	players[rootPosition] = rootPlayerState
 	return players
