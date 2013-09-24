@@ -84,18 +84,26 @@ func TestProbabilities(t *testing.T) {
 	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
 
 	gameState := createGameState()
-	actions := gameState.currentRound().south.actions[card1]
-	actions.received = true
-	gameState.currentRound().south.actions[card1] = actions
+	actions1 := gameState.currentRound().south.actions[card1]
+	actions1.received = true
+	gameState.currentRound().south.actions[card1] = actions1
 
 	probabilities := gameState.currentRound().probabilities()
 
-	cardProbability := probabilities["south"][card1]
-	if cardProbability != 100 {
-		t.Error("Card should be there", cardProbability)
+	if probabilities["south"][card1] != 100 {
+		t.Error("Card should be there", probabilities["south"][card1], card1)
 	}
 	if probabilities["north"][card1] != 0 {
-		t.Error("Card shouldn't be elsewhere")
+		t.Error("Card shouldn't be elsewhere", card1)
+	}
+
+	actions1 = gameState.currentRound().south.actions[card1]
+	actions1.played = true
+	gameState.currentRound().south.actions[card1] = actions1
+
+	probabilities = gameState.currentRound().probabilities()
+	if probabilities["south"][card1] != 0 {
+		t.Error("Card was played", probabilities["south"][card1], card1)
 	}
 }
 

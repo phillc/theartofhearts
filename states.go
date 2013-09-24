@@ -219,6 +219,14 @@ func (roundState *RoundState) probabilities() map[Position]map[Card]int {
 					}
 				}
 				break
+			} else if actions.played {
+				for _, otherPosition := range positions {
+					probabilities[otherPosition][*card] = 0
+				}
+				break
+			} else {
+				//else check if that player has ever played off suit. Redistribute probabilities
+				probabilities[position][*card] = 33
 			}
 		}
 	}
