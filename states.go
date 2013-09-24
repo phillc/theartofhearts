@@ -76,10 +76,30 @@ type Action struct {
 	received bool
 }
 
+func (action Action) String() string {
+	str := "Action:<"
+	if action.dealt {
+		str = str + " dealt"
+	}
+	if action.played {
+		str = str + " played"
+	}
+	if action.passed {
+		str = str + " passed"
+	}
+	if action.received {
+		str = str + " received"
+	}
+	if action.isHeld() {
+		str = str + " :held:"
+	}
+	str = str + " >"
+	return str
+}
+
 func (action *Action) isHeld() bool {
 	return !action.played && ((action.dealt && !action.passed) || action.received)
 }
-
 
 // Uhh... is this needed? why not go staight to the map?
 type PlayerState struct {
@@ -340,16 +360,27 @@ func buildPlayerStates(round *Round) map[Position]PlayerState {
 		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
 		actions := cards[card]
 		actions.dealt = true
-		actions.passed = true // then mark it not passed below
+		actions.played = true
+		cards[card] = actions
+	}
+	for _, aCard := range round.passed {
+		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
+		actions := cards[card]
+		actions.passed = true
+		actions.played = false
+		cards[card] = actions
+	}
+	for _, aCard := range round.received {
+		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
+		actions := cards[card]
+		actions.received = true
+		actions.played = true
 		cards[card] = actions
 	}
 	for _, aCard := range round.held {
 		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
 		actions := cards[card]
-		actions.passed = false
-		if !actions.dealt {
-			actions.received = true
-		}
+		actions.played = false
 		cards[card] = actions
 	}
 	rootPlayerState := PlayerState{ actions: cards }

@@ -37,6 +37,34 @@ func (card Card) order() int {
 	return 0
 }
 
+func (card Card) String() string {
+	rank := "<NO RANK>"
+	switch card.rank {
+	case AgentVsAgent.Rank_TWO: rank = "TWO"
+	case AgentVsAgent.Rank_THREE: rank = "THREE"
+	case AgentVsAgent.Rank_FOUR: rank = "FOUR"
+	case AgentVsAgent.Rank_FIVE: rank = "FIVE"
+	case AgentVsAgent.Rank_SIX: rank = "SIX"
+	case AgentVsAgent.Rank_SEVEN: rank = "SEVEN"
+	case AgentVsAgent.Rank_EIGHT: rank = "EIGHT"
+	case AgentVsAgent.Rank_NINE: rank = "NINE"
+	case AgentVsAgent.Rank_TEN: rank = "TEN"
+	case AgentVsAgent.Rank_JACK: rank = "JACK"
+	case AgentVsAgent.Rank_QUEEN: rank = "QUEEN"
+	case AgentVsAgent.Rank_KING: rank = "KING"
+	case AgentVsAgent.Rank_ACE: rank = "ACE"
+	}
+
+	suit := "<NO SUIT>"
+	switch card.suit {
+	case AgentVsAgent.Suit_CLUBS: suit = "CLUBS"
+	case AgentVsAgent.Suit_DIAMONDS: suit = "DIAMONDS"
+	case AgentVsAgent.Suit_SPADES: suit = "SPADES"
+	case AgentVsAgent.Suit_HEARTS: suit = "HEARTS"
+	}
+	return "::" + rank + " of " + suit + "::"
+}
+
 func (card Card) score() int {
 	value := 0
 	if card.suit == AgentVsAgent.Suit_HEARTS {

@@ -7,7 +7,6 @@ import (
 	"sort"
 )
 
-
 type PassEvaluation struct {
 	number int
 	cards Cards

@@ -61,6 +61,8 @@ type Round struct {
 	number int
 	tricks []*Trick
 	dealt []*AgentVsAgent.Card
+	passed []*AgentVsAgent.Card
+	received []*AgentVsAgent.Card
 	held []*AgentVsAgent.Card
 	game *Game
 }
@@ -96,7 +98,7 @@ func (round *Round) passCards(opts *options) (err error) {
 			toRemove := false
 
 			for _, cardToPass := range cardsToPass {
-				if cardToPass == heldCard {
+				if cardToPass.Suit == heldCard.Suit && cardToPass.Rank == heldCard.Rank {
 					toRemove = true
 				}
 			}
@@ -111,6 +113,8 @@ func (round *Round) passCards(opts *options) (err error) {
 		if ex != nil { return errors.New((*ex).String()) }
 		round.log("Received cards:", receivedCards)
 		round.held = append(newHeld, receivedCards...)
+		round.passed = cardsToPass
+		round.received = receivedCards
 	}
 	return err
 }
