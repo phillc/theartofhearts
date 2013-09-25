@@ -60,7 +60,7 @@ func passCards(round Round) []*AgentVsAgent.Card {
 }
 
 func evaluatePasses(gameState *GameState, position Position, evalCh chan PassEvaluation) int {
-	heldCards := gameState.currentRound().playerState(position).held()
+	heldCards := gameState.currentRound().playerState(position).definitelyHeld()
 
 	// too many combos right now, filter some out
 	sort.Sort(sort.Reverse(ByOrder{heldCards}))
