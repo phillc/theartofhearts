@@ -46,6 +46,7 @@ func (simulation *Simulation) advance() {
 				}
 			}
 
+			// todo: card probabilities != move probabilities
 			for card, probability := range roundState.playableCardProbabilities() {
 				newGameState := gs.play(card)
 				newSimulation := Simulation{ gameState: newGameState, probability: probability }

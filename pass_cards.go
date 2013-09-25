@@ -54,9 +54,6 @@ func passCards(round Round) []*AgentVsAgent.Card {
 	}
 
 	return cardsToPass
-
-	// Whatever modification to the state after passing needs to create the first trick, with two of clubs
-
 }
 
 func evaluatePasses(gameState *GameState, position Position, evalCh chan PassEvaluation) int {
@@ -64,7 +61,7 @@ func evaluatePasses(gameState *GameState, position Position, evalCh chan PassEva
 
 	// too many combos right now, filter some out
 	sort.Sort(sort.Reverse(ByOrder{heldCards}))
-	heldCards = heldCards[0:4]
+	heldCards = heldCards[0:10]
 
 	var combinations []*Cards
 	length := len(heldCards)
