@@ -62,6 +62,12 @@ func evaluatePlays(gameState *GameState, position Position, evalCh chan PlayEval
 func evaluatePlay(gameState *GameState, position Position, card Card) int {
 	fmt.Println(">>>>>>>>>>evaluating play of", card)
 	newGameState := gameState.play(card)
-	return newGameState.evaluate(position)
+	simulation := Simulation{ gameState: newGameState }
+	simulation.advance()
+	fmt.Println("simulating", simulation)
+	evaluation := newGameState.evaluate(position)
+	simulatedEvaluation := simulation.evaluate(position)
+	fmt.Println("aaaaaaaaaaaaa!!done. eval:", evaluation, "simulated:", simulatedEvaluation)
+	return simulatedEvaluation
 }
 

@@ -48,13 +48,13 @@ func (simulation *Simulation) advance() {
 
 			for card, probability := range roundState.playableCardProbabilities() {
 				newGameState := gs.play(card)
-				/*probability := probabilities[position][*card]*/
 				newSimulation := Simulation{ gameState: newGameState, probability: probability }
 				simulation.children = append(simulation.children, &newSimulation)
 			}
 		}
 	} else {
 		/*simulation.children[0].advance()*/
+		fmt.Println("# of children advancing:", len(simulation.children))
 		for _, child := range simulation.children {
 			child.advance()
 		}
@@ -62,7 +62,18 @@ func (simulation *Simulation) advance() {
 }
 
 func (simulation *Simulation) evaluate(position Position) int {
-	return simulation.gameState.evaluate(position)
+	evaluation := 1000000 // or rather, infinity
+	if len(simulation.children) > 0 {
+		for _, child := range simulation.children {
+			childEval := child.gameState.evaluate(position)
+			if childEval < evaluation {
+				evaluation = childEval
+			}
+		}
+	} else {
+		evaluation = simulation.gameState.evaluate(position)
+	}
+	return evaluation
 }
 
 type TrickState struct {
@@ -80,7 +91,6 @@ func (trickState *TrickState) evaluate(position Position) int {
 	} else {
 		evaluation = evaluation + (trickState.score() * 3)
 	}
-	fmt.Println("trick eval", evaluation)
 	return evaluation
 }
 
@@ -329,6 +339,7 @@ func (roundState *RoundState) evaluate(position Position) int {
 
 	for card, action := range roundState.playerState(position).actions {
 		if action.isDefinitelyHeld() {
+			// todo: two of clubs doesn't matter if we can just simulate past a couple tricks
 			if card.suit == AgentVsAgent.Suit_CLUBS && card.rank == AgentVsAgent.Rank_TWO {
 				handScore = handScore - 13
 			} else {
@@ -337,6 +348,8 @@ func (roundState *RoundState) evaluate(position Position) int {
 		}
 	}
 	evaluation = evaluation + handScore
+
+	// todo: full round score
 
 	if roundState.currentTrick() != nil {
 		evaluation = evaluation + roundState.currentTrick().evaluate(position)
@@ -399,8 +412,6 @@ func (gameState *GameState) pass(position Position, cards Cards) *GameState {
 }
 
 func (gameState *GameState) play(card Card) *GameState {
-	// fmt.Println("before>>>>>>>?????", gameState.currentRound().currentTrick().played)
-
 	newGameState := gameState.clone()
 	currentRound := newGameState.currentRound()
 	position := currentRound.currentTrick().positionsMissing()[0]
@@ -415,7 +426,6 @@ func (gameState *GameState) play(card Card) *GameState {
 	currentTrick := currentRound.currentTrick()
 	currentTrick.played = append(currentTrick.played, &card)
 
-	// fmt.Println("after>>>>>>>?????", gameState.currentRound().currentTrick().played)
 	return newGameState
 }
 
