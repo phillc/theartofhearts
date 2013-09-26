@@ -15,7 +15,7 @@ type PassEvaluation struct {
 
 func passCards(round Round) []*AgentVsAgent.Card {
 	fmt.Println("passing cards")
-	timeout := time.After(800 * time.Millisecond)
+	timeout := time.After(700 * time.Millisecond)
 	evalCh := make(chan PassEvaluation)
 	evaluations := make(map[int]PassEvaluation)
 	game := round.game
