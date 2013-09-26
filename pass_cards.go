@@ -20,9 +20,9 @@ func passCards(round Round) []*AgentVsAgent.Card {
 	evaluations := make(map[int]PassEvaluation)
 	game := round.game
 	position := (Position)(game.info.Position)
-	gameState := buildGameState(game)
+	roundState := buildRoundState(&round)
 
-	numEvals := evaluatePasses(gameState, position, evalCh)
+	numEvals := evaluatePasses(roundState, position, evalCh)
 
 	for i := 0; i < numEvals; i++ {
 		round.log("Waiting for a pass evaluation")
@@ -56,8 +56,8 @@ func passCards(round Round) []*AgentVsAgent.Card {
 	return cardsToPass
 }
 
-func evaluatePasses(gameState *GameState, position Position, evalCh chan PassEvaluation) int {
-	heldCards := gameState.currentRound().playerState(position).definitelyHeld()
+func evaluatePasses(roundState *RoundState, position Position, evalCh chan PassEvaluation) int {
+	heldCards := roundState.playerState(position).definitelyHeld()
 
 	// too many combos right now, filter some out
 	sort.Sort(sort.Reverse(ByOrder{heldCards}))
@@ -77,14 +77,14 @@ func evaluatePasses(gameState *GameState, position Position, evalCh chan PassEva
 
 	for number, cards := range combinations {
 		go func(number int, cards Cards) {
-			evalCh <- PassEvaluation{number, cards, evaluatePass(gameState, position, cards)}
+			evalCh <- PassEvaluation{number, cards, evaluatePass(roundState, position, cards)}
 		} (number, *cards)
 	}
 	return len(combinations)
 }
 
-func evaluatePass(gameState *GameState, position Position, cards Cards) int {
+func evaluatePass(roundState *RoundState, position Position, cards Cards) int {
 	fmt.Println(">>>>>>>>>>evaluating pass of", cards)
-	newGameState := gameState.pass(position, cards)
-	return newGameState.evaluate(position)
+	newRoundState := roundState.pass(position, cards)
+	return newRoundState.evaluate(position)
 }

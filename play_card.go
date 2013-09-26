@@ -15,11 +15,12 @@ func playCard(trick *Trick) *AgentVsAgent.Card {
 	timeout := time.After(800 * time.Millisecond)
 	evalCh := make(chan PlayEvaluation)
 	evaluations := make(map[Card]PlayEvaluation)
-	game := trick.round.game
+	round := trick.round
+	game := round.game
 	position := (Position)(game.info.Position)
-	gameState := buildGameState(game)
+	roundState := buildRoundState(round)
 
-	numEvals := evaluatePlays(gameState, position, evalCh)
+	numEvals := evaluatePlays(roundState, position, evalCh)
 
 	for i := 0; i < numEvals; i++ {
 		trick.log("Waiting for an evaluation")
@@ -48,27 +49,27 @@ func playCard(trick *Trick) *AgentVsAgent.Card {
 	return play.card.toAvA()
 }
 
-func evaluatePlays(gameState *GameState, position Position, evalCh chan PlayEvaluation) int {
-	cards := gameState.currentRound().playableCards()
+func evaluatePlays(roundState *RoundState, position Position, evalCh chan PlayEvaluation) int {
+	cards := roundState.playableCards()
 	fmt.Println(">>> PLAYABLE CARDS:", cards)
 	for _, card := range cards {
 		go func(card Card) {
-			evalCh <- PlayEvaluation{card, evaluatePlay(gameState, position, card)}
+			evalCh <- PlayEvaluation{card, evaluatePlay(roundState, position, card)}
 		} (*card)
 	}
 	return len(cards)
 }
 
-func evaluatePlay(gameState *GameState, position Position, card Card) int {
+func evaluatePlay(roundState *RoundState, position Position, card Card) int {
 	fmt.Println(">>>>>>>>>>evaluating play of", card)
-	newGameState := gameState.play(card)
-	simulation := Simulation{ gameState: newGameState }
+	newRoundState := roundState.play(card)
+	simulation := Simulation{ roundState: newRoundState }
 	simulation.advance()
 	fmt.Println("simulating", simulation)
-	evaluation := newGameState.evaluate(position)
+	evaluation := newRoundState.evaluate(position)
 	simulatedEvaluation := simulation.evaluate(position)
 	fmt.Println("aaaaaaaaaaaaa!!done. eval:", evaluation, "simulated:", simulatedEvaluation)
-	fmt.Println("Scores: ", newGameState.scores())
+	fmt.Println("Scores: ", newRoundState.scores())
 	return simulatedEvaluation
 }
 
