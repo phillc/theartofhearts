@@ -10,18 +10,6 @@ type TrickState struct {
 	played Cards
 }
 
-func (trickState *TrickState) evaluate(position Position) int {
-	var evaluation int
-	if len(trickState.played) == 0 {
-		evaluation = 0
-	} else if trickState.winner() == position {
-		evaluation = evaluation - (trickState.score() * 10)
-	} else {
-		evaluation = evaluation + (trickState.score() * 3)
-	}
-	return evaluation
-}
-
 func (trickState *TrickState) winner() Position {
 	matchingSuit := trickState.played.allOfSuit(trickState.played[0].suit)
 	sort.Sort(sort.Reverse(ByOrder{matchingSuit}))

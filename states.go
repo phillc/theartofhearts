@@ -27,7 +27,7 @@ func (simulation *Simulation) advance() {
 				if probability > 0 {
 					newRoundState := roundState.clone()
 					newTrickState := TrickState{ number: 1, leader: position, played: Cards{} }
-					newRoundState.trickStates = []TrickState{ newTrickState }
+					newRoundState.trickStates = []*TrickState{ &newTrickState }
 					newRoundState = newRoundState.play(twoClubs)
 					newSimulation := Simulation{ roundState: newRoundState, probability: probability }
 					simulation.children = append(simulation.children, &newSimulation)
@@ -40,7 +40,7 @@ func (simulation *Simulation) advance() {
 				} else {
 					leader := roundState.currentTrick().winner()
 					newTrickState := TrickState{ number: len(roundState.trickStates) + 1, leader: leader, played: Cards{} }
-					roundState.trickStates = append(roundState.trickStates, newTrickState)
+					roundState.trickStates = append(roundState.trickStates, &newTrickState)
 				}
 			}
 
@@ -53,7 +53,9 @@ func (simulation *Simulation) advance() {
 		}
 	} else {
 		/*simulation.children[0].advance()*/
-		fmt.Println("# of children advancing:", len(simulation.children))
+		if len(simulation.children) > 20 {
+			fmt.Println("# of children advancing:", len(simulation.children))
+		}
 		for _, child := range simulation.children {
 			child.advance()
 		}
@@ -75,72 +77,68 @@ func (simulation *Simulation) evaluate(position Position) int {
 	return evaluation
 }
 
-type Action struct {
-	dealt bool
-	played bool
-	passed bool
-	received bool
-	// can't have
-}
+func buildRoundState(round *Round) *RoundState {
+	var trickStates []*TrickState
+	for _, trick := range round.tricks {
+		trickStates = append(trickStates, buildTrickState(trick))
+	}
 
-func (action Action) String() string {
-	str := "Action:<"
-	if action.dealt {
-		str = str + " dealt"
-	}
-	if action.played {
-		str = str + " played"
-	}
-	if action.passed {
-		str = str + " passed"
-	}
-	if action.received {
-		str = str + " received"
-	}
-	if action.isDefinitelyHeld() {
-		str = str + " :definitely held:"
-	}
-	str = str + " >"
-	return str
-}
+	rootPosition := (Position)(round.game.info.Position)
+	players := make(map[Position]*PlayerState, 4)
+	players["north"] = &PlayerState{}
+	players["east"] = &PlayerState{}
+	players["south"] = &PlayerState{}
+	players["west"] = &PlayerState{}
+	rootPlayer := players[rootPosition]
+	rootPlayer.root = true
 
-func (action *Action) isDefinitelyHeld() bool {
-	return !action.played && ((action.dealt && !action.passed) || action.received)
-}
-
-type PlayerState struct {
-	actions map[Card]Action
-	root bool
-}
-
-func (playerState *PlayerState) definitelyHeld() Cards {
-	cards := Cards{}
-	for card, action := range playerState.actions {
-		if action.isDefinitelyHeld() {
-			aCard := card
-			cards = append(cards, &aCard)
+	passingTo := rootPlayer
+	receivedFrom := rootPlayer
+	positions := []Position{"north", "east", "south", "west"}
+	rootIndex := -1
+	for i, position := range positions {
+		if position == rootPosition {
+			rootIndex = i
+			break
 		}
 	}
-	return cards
-}
-
-func (playerState *PlayerState) clone() *PlayerState {
-	newActions := make(map[Card]Action)
-	for card, action := range playerState.actions {
-		newActions[card] = action
+	positionsFromRoot := append(positions[rootIndex:4], positions[0:rootIndex]...)
+	switch (round.number - 1) % 4 {
+	case 0:
+		// left
+		passingTo = players[positionsFromRoot[3]]
+		receivedFrom = players[positionsFromRoot[1]]
+	case 1:
+		// right
+		passingTo = players[positionsFromRoot[1]]
+		receivedFrom = players[positionsFromRoot[3]]
+	case 2:
+		// across
+		passingTo = players[positionsFromRoot[2]]
+		receivedFrom = players[positionsFromRoot[2]]
 	}
 
-	newPlayerState := *playerState
-	newPlayerState.actions = newActions
-	return &newPlayerState
-}
-
-func buildRoundState(round *Round) *RoundState {
-	players := buildPlayerStates(round)
-	var trickStates []TrickState
-	for _, trick := range round.tricks {
-		trickStates = append(trickStates, *buildTrickState(trick))
+	for _, aCard := range round.dealt {
+		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
+		rootPlayer.dealt(card)
 	}
+	for _, aCard := range round.passed {
+		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
+		rootPlayer.passed(card)
+		passingTo.received(card)
+	}
+	for _, aCard := range round.received {
+		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
+		rootPlayer.received(card)
+		receivedFrom.passed(card)
+	}
+
+	for _, trickState := range trickStates {
+		for index, position := range trickState.positionsFromLeader()[0:len(trickState.played)] {
+			players[position].played(*trickState.played[index])
+		}
+	}
+
 	return &RoundState{
 		number: round.number,
 		trickStates: trickStates,
@@ -149,46 +147,6 @@ func buildRoundState(round *Round) *RoundState {
 		south: players["south"],
 		west: players["west"],
 	}
-}
-
-func buildPlayerStates(round *Round) map[Position]PlayerState {
-	rootPosition := (Position)(round.game.info.Position)
-	players := make(map[Position]PlayerState, 4)
-	cards := make(map[Card]Action, 13)
-
-	for _, aCard := range round.dealt {
-		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
-		actions := cards[card]
-		actions.dealt = true
-		actions.played = true
-		cards[card] = actions
-	}
-	for _, aCard := range round.passed {
-		//todo: mark received for player passed to
-		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
-		actions := cards[card]
-		actions.passed = true
-		actions.played = false
-		cards[card] = actions
-	}
-	for _, aCard := range round.received {
-		//todo: mark dealt and passed for player received from
-		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
-		actions := cards[card]
-		actions.received = true
-		actions.played = true
-		cards[card] = actions
-	}
-	for _, aCard := range round.held {
-		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
-		actions := cards[card]
-		actions.played = false
-		cards[card] = actions
-	}
-	rootPlayerState := PlayerState{ actions: cards, root: true }
-
-	players[rootPosition] = rootPlayerState
-	return players
 }
 
 func buildTrickState(trick *Trick) *TrickState {

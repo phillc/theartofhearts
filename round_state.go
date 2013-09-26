@@ -6,19 +6,19 @@ import (
 
 type RoundState struct {
 	number int
-	north PlayerState
-	east PlayerState
-	south PlayerState
-	west PlayerState
-	trickStates []TrickState
+	north *PlayerState
+	east *PlayerState
+	south *PlayerState
+	west *PlayerState
+	trickStates []*TrickState
 }
 
 func (roundState *RoundState) playerState(position Position) *PlayerState {
 	switch string(position) {
-	case "north": return &roundState.north
-	case "east": return &roundState.east
-	case "south": return &roundState.south
-	case "west": return &roundState.west
+	case "north": return roundState.north
+	case "east": return roundState.east
+	case "south": return roundState.south
+	case "west": return roundState.west
 	}
 	return &PlayerState{}
 }
@@ -26,7 +26,7 @@ func (roundState *RoundState) playerState(position Position) *PlayerState {
 func (roundState *RoundState) currentTrick() *TrickState {
 	var trickState *TrickState
 	if len(roundState.trickStates) > 0 {
-		trickState = &roundState.trickStates[len(roundState.trickStates) - 1]
+		trickState = roundState.trickStates[len(roundState.trickStates) - 1]
 	}
 	return trickState
 }
@@ -110,6 +110,7 @@ func (roundState *RoundState) probabilities() map[Position]map[Card]int {
 	}
 
 	cards := allCards()
+	// todo: what if we find remaining cards, then start from there
 	for _, card := range cards {
 		for _, position := range positions {
 			playerState := roundState.playerState(position)
@@ -158,10 +159,12 @@ func (roundState *RoundState) evaluate(position Position) int {
 	}
 	evaluation = evaluation + handScore
 
-	// todo: full round score
-
-	if roundState.currentTrick() != nil {
-		evaluation = evaluation + roundState.currentTrick().evaluate(position)
+	for scorePosition, score := range roundState.scores() {
+		if scorePosition == position {
+			evaluation = evaluation - (score * 10)
+		} else {
+			evaluation = evaluation + (score * 3)
+		}
 	}
 
 	return evaluation
@@ -171,7 +174,7 @@ func (roundState *RoundState) scores() map[Position]int {
 	scores := make(map[Position]int, 4)
 
 	for _, trickState := range roundState.trickStates {
-		if len(trickState.played) == 4 {
+		if len(trickState.played) > 0 {
 			position := trickState.winner()
 			scores[position] = scores[position] + trickState.score()
 		}
@@ -191,17 +194,17 @@ func (roundState *RoundState) scores() map[Position]int {
 }
 
 func (roundState *RoundState) clone() *RoundState {
-	var newTrickStates []TrickState
+	var newTrickStates []*TrickState
 	for _, trickState := range roundState.trickStates {
-	  newTrickStates = append(newTrickStates, *trickState.clone())
+	  newTrickStates = append(newTrickStates, trickState.clone())
 	}
 
 	newRoundState := *roundState
 	newRoundState.trickStates = newTrickStates
-	newRoundState.north = *roundState.north.clone()
-	newRoundState.east = *roundState.east.clone()
-	newRoundState.south = *roundState.south.clone()
-	newRoundState.west = *roundState.west.clone()
+	newRoundState.north = roundState.north.clone()
+	newRoundState.east = roundState.east.clone()
+	newRoundState.south = roundState.south.clone()
+	newRoundState.west = roundState.west.clone()
 	return &newRoundState
 }
 

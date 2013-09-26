@@ -8,10 +8,9 @@ import (
 func TestProbabilities(t *testing.T) {
 	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
 
+	/*actions1 := &Action{ received: true }*/
 	roundState := createRoundState()
-	actions1 := roundState.south.actions[card1]
-	actions1.received = true
-	roundState.south.actions[card1] = actions1
+	roundState.south.received(card1)
 
 	probabilities := roundState.probabilities()
 
@@ -22,9 +21,7 @@ func TestProbabilities(t *testing.T) {
 		t.Error("Card shouldn't be elsewhere", card1)
 	}
 
-	actions1 = roundState.south.actions[card1]
-	actions1.played = true
-	roundState.south.actions[card1] = actions1
+	roundState.south.played(card1)
 
 	probabilities = roundState.probabilities()
 	if probabilities["south"][card1] != 0 {
@@ -47,7 +44,7 @@ func TestPlay(t *testing.T) {
 
 	played := Cards{}
 	trickState := TrickState{ leader: position, played: played }
-	trickStates := []TrickState{ trickState }
+	trickStates := []*TrickState{ &trickState }
 	roundState.trickStates = trickStates
 	card := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
 
