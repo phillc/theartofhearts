@@ -359,6 +359,29 @@ func (roundState *RoundState) evaluate(position Position) int {
 	return evaluation
 }
 
+func (roundState *RoundState) scores() map[Position]int {
+	scores := make(map[Position]int, 4)
+
+	for _, trickState := range roundState.trickStates {
+		if len(trickState.played) == 4 {
+			position := trickState.winner()
+			scores[position] = scores[position] + trickState.score()
+		}
+	}
+	for position, score := range scores {
+		if score == 26 {
+			scores["north"] = 26
+			scores["east"] = 26
+			scores["south"] = 26
+			scores["west"] = 26
+			scores[position] = 0
+			break
+		}
+	}
+
+	return scores
+}
+
 func (roundState *RoundState) clone() *RoundState {
 	var newTrickStates []TrickState
 	for _, trickState := range roundState.trickStates {
@@ -387,6 +410,19 @@ func (gameState *GameState) evaluate(position Position) int {
 	//evaluation = evaluation - gameState.scores[position]
 	evaluation = evaluation + gameState.currentRound().evaluate(position)
 	return evaluation
+}
+
+func (gameState *GameState) scores() map[Position]int {
+	gameScores := make(map[Position]int, 4)
+
+	for _, roundState := range gameState.roundStates {
+		roundScores := roundState.scores()
+		for position, score := range roundScores {
+			gameScores[position] = gameScores[position] + score
+		}
+	}
+
+	return gameScores
 }
 
 func (gameState *GameState) clone() *GameState {
