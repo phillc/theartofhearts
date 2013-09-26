@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./lib/AgentVsAgent"
 )
 
 type Action struct {
@@ -39,6 +40,7 @@ func (action *Action) isDefinitelyHeld() bool {
 type PlayerState struct {
 	actions map[Card]Action
 	root bool
+	emptySuits []AgentVsAgent.Suit // uniqueness?
 }
 
 func (playerState *PlayerState) definitelyHeld() Cards {
@@ -85,4 +87,8 @@ func (playerState *PlayerState) passed(card Card) {
 	action := playerState.actions[card]
 	action.passed = true
 	playerState.actions[card] = action
+}
+
+func (playerState *PlayerState) discardedOn(suit AgentVsAgent.Suit) {
+	playerState.emptySuits = append(playerState.emptySuits, suit)
 }

@@ -55,7 +55,8 @@ func TestPlay(t *testing.T) {
 		t.Error("the card should not be played")
 	}
 
-	newRoundState := roundState.play(card)
+	newRoundState := roundState.clone()
+	newRoundState.play(card)
 
 	if len(roundState.currentTrick().played) > 0 {
 		t.Error("there should still be no played cards in the original")
@@ -87,7 +88,8 @@ func TestPass(t *testing.T) {
 
 	roundState := createRoundState()
 
-	newRoundState := roundState.pass(position, passedCards)
+	newRoundState := roundState.clone()
+	newRoundState.pass(position, passedCards)
 
 	for _, passedCard := range passedCards {
 		if !newRoundState.south.actions[*passedCard].passed {

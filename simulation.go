@@ -26,7 +26,7 @@ func (simulation *Simulation) advance() {
 					newRoundState := roundState.clone()
 					newTrickState := TrickState{ number: 1, leader: position, played: Cards{} }
 					newRoundState.trickStates = []*TrickState{ &newTrickState }
-					newRoundState = newRoundState.play(twoClubs)
+					newRoundState.play(twoClubs)
 					newSimulation := Simulation{ roundState: newRoundState, probability: probability }
 					simulation.children = append(simulation.children, &newSimulation)
 				}
@@ -42,9 +42,10 @@ func (simulation *Simulation) advance() {
 				}
 			}
 
-			// todo: card probabilities != move probabilities
+			// todo: card probabilities != move probabilities... and move probabilities need to add up to 1 (100?)
 			for card, probability := range roundState.playableCardProbabilities() {
-				newRoundState := roundState.play(card)
+				newRoundState := roundState.clone()
+				newRoundState.play(card)
 				newSimulation := Simulation{ roundState: newRoundState, probability: probability }
 				simulation.children = append(simulation.children, &newSimulation)
 			}

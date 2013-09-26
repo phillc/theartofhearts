@@ -60,7 +60,14 @@ func buildRoundState(round *Round) *RoundState {
 
 	for _, trickState := range trickStates {
 		for index, position := range trickState.positionsFromLeader()[0:len(trickState.played)] {
-			players[position].played(*trickState.played[index])
+			playedCard := *trickState.played[index]
+
+			leadSuit := trickState.played[0].suit
+			if playedCard.suit != leadSuit {
+				players[position].discardedOn(leadSuit)
+			}
+
+			players[position].played(playedCard)
 		}
 	}
 

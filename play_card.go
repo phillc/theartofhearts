@@ -62,28 +62,15 @@ func evaluatePlays(roundState *RoundState, position Position, evalCh chan PlayEv
 
 func evaluatePlay(roundState *RoundState, position Position, card Card) int {
 	fmt.Println(">>>>>>>>>>evaluating play of", card)
-	newRoundState := roundState.play(card)
+	newRoundState := roundState.clone()
+	newRoundState.play(card)
 	simulation := Simulation{ roundState: newRoundState }
-	fmt.Println("ADVANCE1")
-	simulation.advance()
-	fmt.Println("ADVANCE2")
-	simulation.advance()
-	fmt.Println("ADVANCE3")
-	simulation.advance()
-	fmt.Println("ADVANCE4")
-	simulation.advance()
-	fmt.Println("ADVANCE5")
-	simulation.advance()
-	fmt.Println("ADVANCE6")
-	simulation.advance()
-	fmt.Println("ADVANCE7")
-	simulation.advance()
-	fmt.Println("ADVANCE8")
-	simulation.advance()
-	fmt.Println("ADVANCE9")
-	simulation.advance()
-	fmt.Println("ADVANCE10")
-	simulation.advance()
+
+	for i := 0; i < 2; i++ {
+	// for i := 0; i < (8 - len(newRoundState.currentTrick().played)); i++ {
+		fmt.Println("ADVANCE", i)
+		simulation.advance()
+	}
 	fmt.Println("simulating", simulation)
 	evaluation := newRoundState.evaluate(position)
 	simulatedEvaluation := simulation.evaluate(position)

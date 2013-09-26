@@ -208,33 +208,35 @@ func (roundState *RoundState) clone() *RoundState {
 	return &newRoundState
 }
 
-func (roundState *RoundState) pass(position Position, cards Cards) *RoundState {
-	newRoundState := roundState.clone()
-	playerState := newRoundState.playerState(position)
+func (roundState *RoundState) pass(position Position, cards Cards) {
+	playerState := roundState.playerState(position)
 	actions := playerState.actions
 	for _, passedCard := range cards {
 		action := actions[*passedCard]
 		action.passed = true
 		actions[*passedCard] = action
 	}
-	return newRoundState
 }
 
-func (roundState *RoundState) play(card Card) *RoundState {
-	newRoundState := roundState.clone()
-	position := newRoundState.currentTrick().positionsMissing()[0]
+func (roundState *RoundState) play(card Card) {
+	roundState.nextTrick()
+	currentTrick := roundState.currentTrick()
+	position := currentTrick.positionsMissing()[0]
 
-	playerState := newRoundState.playerState(position)
-	actions := playerState.actions
-	action := actions[card]
-	action.played = true
-	actions[card] = action
-	newRoundState.playerState(position).actions[card] = action
-
-	currentTrick := newRoundState.currentTrick()
+	roundState.playerState(position).played(card)
 	currentTrick.played = append(currentTrick.played, &card)
 
-	return newRoundState
+	// Is this needed?
+	// if len(currentTrick.played) > 1 && card.suit != currentTrick.played[0].suit {
+		// roundState.playerState(position).discardedOn(currentTrick.played[0].suit)
+	// }
 }
 
+func (roundState *RoundState) nextTrick() {
+	if len(roundState.currentTrick().played) == 4 && len(roundState.trickStates) != 13 {
+		leader := roundState.currentTrick().winner()
+		newTrickState := TrickState{ number: len(roundState.trickStates) + 1, leader: leader, played: Cards{} }
+		roundState.trickStates = append(roundState.trickStates, &newTrickState)
+	}
+}
 

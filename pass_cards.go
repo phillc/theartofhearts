@@ -85,6 +85,7 @@ func evaluatePasses(roundState *RoundState, position Position, evalCh chan PassE
 
 func evaluatePass(roundState *RoundState, position Position, cards Cards) int {
 	fmt.Println(">>>>>>>>>>evaluating pass of", cards)
-	newRoundState := roundState.pass(position, cards)
+	newRoundState := roundState.clone()
+	newRoundState.pass(position, cards)
 	return newRoundState.evaluate(position)
 }
