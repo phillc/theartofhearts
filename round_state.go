@@ -83,59 +83,17 @@ func (roundState *RoundState) playableCardsOutOf(startingCards Cards) Cards {
 
 func (roundState *RoundState) playableCardProbabilities() map[Card]int {
 	position := roundState.currentTrick().positionsMissing()[0]
-	probabilities := roundState.probabilities()[position]
 
-	possiblyHeldCards := Cards{}
-	for card, probability := range probabilities {
-		if probability > 0 {
-			aCard := card
-			possiblyHeldCards = append(possiblyHeldCards, &aCard)
-		}
-	}
+	knowledge := Knowledge{}
+	knowledge.buildFrom(roundState)
+	possiblyHeldCards := knowledge.possiblyHeldCardsFor(position)
 
 	playableProbabilities := make(map[Card]int)
 	for _, card := range roundState.playableCardsOutOf(possiblyHeldCards) {
-		playableProbabilities[*card] = probabilities[*card]
+		playableProbabilities[*card] = 100
 	}
 
 	return playableProbabilities
-}
-
-func (roundState *RoundState) probabilities() map[Position]map[Card]int {
-	positions := []Position{"north", "east", "south", "west"}
-	probabilities := make(map[Position]map[Card]int, 4)
-
-	for _, position := range positions {
-		probabilities[position] = make(map[Card]int)
-	}
-
-	cards := allCards()
-	// todo: what if we find remaining cards, then start from there
-	for _, card := range cards {
-		for _, position := range positions {
-			playerState := roundState.playerState(position)
-			actions := playerState.actions[*card]
-			if actions.isDefinitelyHeld() {
-				probabilities[position][*card] = 100
-				for _, otherPosition := range positions {
-					if otherPosition != position {
-						probabilities[otherPosition][*card] = 0
-					}
-				}
-				break
-			} else if actions.played {
-				for _, otherPosition := range positions {
-					probabilities[otherPosition][*card] = 0
-				}
-				break
-			} else if !playerState.root {
-				// todo: if played off suit, then zero and chage the other guys
-				probabilities[position][*card] = 33
-			}
-		}
-	}
-
-	return probabilities
 }
 
 func (roundState *RoundState) evaluate(position Position) int {
@@ -219,17 +177,13 @@ func (roundState *RoundState) pass(position Position, cards Cards) {
 }
 
 func (roundState *RoundState) play(card Card) {
-	roundState.nextTrick()
 	currentTrick := roundState.currentTrick()
 	position := currentTrick.positionsMissing()[0]
 
 	roundState.playerState(position).played(card)
 	currentTrick.played = append(currentTrick.played, &card)
 
-	// Is this needed?
-	// if len(currentTrick.played) > 1 && card.suit != currentTrick.played[0].suit {
-		// roundState.playerState(position).discardedOn(currentTrick.played[0].suit)
-	// }
+	roundState.nextTrick()
 }
 
 func (roundState *RoundState) nextTrick() {

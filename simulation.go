@@ -12,30 +12,28 @@ type Simulation struct {
 }
 
 func (simulation *Simulation) advance() {
-	positions := []Position{"north", "east", "south", "west"}
-	roundState := simulation.roundState.clone()
-
 	if len(simulation.children) == 0 {
-		if len(roundState.trickStates) == 0 {
+		if len(simulation.roundState.trickStates) == 0 {
 			twoClubs := Card{ suit: AgentVsAgent.Suit_CLUBS, rank: AgentVsAgent.Rank_TWO }
 
-			probabilities := roundState.probabilities()
-			for _, position := range positions {
-				probability := probabilities[position][twoClubs]
-				if probability > 0 {
-					newRoundState := roundState.clone()
+			cardKnowledge := CardKnowledge{}
+			cardKnowledge.buildFrom(simulation.roundState, twoClubs)
+			for _, position := range allPositions() {
+				if cardKnowledge.isPossiblyHeldBy(position) {
+					newRoundState := simulation.roundState.clone()
 					newTrickState := TrickState{ number: 1, leader: position, played: Cards{} }
 					newRoundState.trickStates = []*TrickState{ &newTrickState }
 					newRoundState.play(twoClubs)
-					newSimulation := Simulation{ roundState: newRoundState, probability: probability }
+					newSimulation := Simulation{ roundState: newRoundState, probability: 100 }
 					simulation.children = append(simulation.children, &newSimulation)
 				}
 			}
 		} else {
-			if len(roundState.currentTrick().played) == 4 {
-				if len(roundState.trickStates) == 13 {
+			if len(simulation.roundState.currentTrick().played) == 4 {
+				if len(simulation.roundState.trickStates) == 13 {
 					return // nothing left to simulate
 				} else {
+					roundState := simulation.roundState.clone()
 					leader := roundState.currentTrick().winner()
 					newTrickState := TrickState{ number: len(roundState.trickStates) + 1, leader: leader, played: Cards{} }
 					roundState.trickStates = append(roundState.trickStates, &newTrickState)
@@ -43,8 +41,8 @@ func (simulation *Simulation) advance() {
 			}
 
 			// todo: card probabilities != move probabilities... and move probabilities need to add up to 1 (100?)
-			for card, probability := range roundState.playableCardProbabilities() {
-				newRoundState := roundState.clone()
+			for card, probability := range simulation.roundState.playableCardProbabilities() {
+				newRoundState := simulation.roundState.clone()
 				newRoundState.play(card)
 				newSimulation := Simulation{ roundState: newRoundState, probability: probability }
 				simulation.children = append(simulation.children, &newSimulation)

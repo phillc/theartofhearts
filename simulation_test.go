@@ -44,7 +44,7 @@ func TestSimulation(t *testing.T) {
 		}
 	}
 
-	trick := rootSimulation.children[0].roundState.currentTrick()
+	trick := rootSimulation.children[0].roundState.trickStates[0]
 	if len(trick.played) != 1 || (trick.played[0].suit != AgentVsAgent.Suit_CLUBS || trick.played[0].rank != AgentVsAgent.Rank_TWO) {
 		t.Error("Should have played just the two of clubs", trick)
 	}
@@ -59,7 +59,7 @@ func TestSimulation(t *testing.T) {
 	rootSimulation.advance()
 
 	simulation := rootSimulation.children[0].children[0].children[0].children[0]
-	trick = simulation.roundState.currentTrick()
+	trick = simulation.roundState.trickStates[0]
 	if len(trick.played) != 4 {
 		t.Error("Four advances should have filled the trick", trick.played)
 	}

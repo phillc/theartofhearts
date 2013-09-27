@@ -92,3 +92,12 @@ func (playerState *PlayerState) passed(card Card) {
 func (playerState *PlayerState) discardedOn(suit AgentVsAgent.Suit) {
 	playerState.emptySuits = append(playerState.emptySuits, suit)
 }
+
+func (playerState *PlayerState) hasDiscardedOn(suit AgentVsAgent.Suit) bool {
+	for _, emptySuit := range playerState.emptySuits {
+		if suit == emptySuit {
+			return true
+		}
+	}
+	return false
+}

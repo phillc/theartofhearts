@@ -5,68 +5,6 @@ import (
 	"./lib/AgentVsAgent"
 )
 
-func TestProbabilitiesWhenRootHasCard(t *testing.T) {
-	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
-	roundState := createRoundState()
-	roundState.south.received(card1)
-
-	probabilities := roundState.probabilities()
-
-	if probabilities["south"][card1] != 100 {
-		t.Error("Card should be there", probabilities["south"][card1], card1)
-	}
-	if probabilities["north"][card1] != 0 || probabilities["west"][card1] != 0 || probabilities["east"][card1] != 0 {
-		t.Error("Card shouldn't be elsewhere", card1)
-	}
-}
-
-func TestProbabilitiesWhenRootDoesNotHaveCard(t *testing.T) {
-	twoClubs := Card{ suit: AgentVsAgent.Suit_CLUBS, rank: AgentVsAgent.Rank_TWO }
-	roundState := createRoundState()
-	probabilities := roundState.probabilities()
-
-	if probabilities["south"][twoClubs] != 0 {
-		t.Error("If root player doesn't see it, he can't have it")
-	}
-	if probabilities["north"][twoClubs] != 33 || probabilities["west"][twoClubs] != 33 || probabilities["east"][twoClubs] != 33 {
-		t.Error("Well if the root player doesn't have it, it must be elsewhere")
-	}
-}
-
-func TestProbabilitiesWhenCardIsPlayed(t *testing.T) {
-	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
-	roundState := createRoundState()
-
-	probabilities := roundState.probabilities()
-	if probabilities["north"][card1] != 33 || probabilities["west"][card1] != 33 || probabilities["east"][card1] != 33 || probabilities["south"][card1] != 0 {
-		t.Error("Test assumes someone else has the card")
-	}
-
-	roundState.north.played(card1)
-	probabilities = roundState.probabilities()
-	if probabilities["north"][card1] != 0 || probabilities["west"][card1] != 0 || probabilities["east"][card1] != 0 || probabilities["south"][card1] != 0 {
-		t.Error("If the card was played, no one should have the card")
-	}
-}
-
-func TestProbabilitiesWhenCardIsPlayedByRoot(t *testing.T) {
-	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
-	roundState := createRoundState()
-	roundState.south.received(card1)
-
-	probabilities := roundState.probabilities()
-	if probabilities["south"][card1] != 100 {
-		t.Error("Test assumes root starts with card")
-	}
-
-	roundState.south.played(card1)
-	probabilities = roundState.probabilities()
-
-	if probabilities["south"][card1] != 0 {
-		t.Error("Card was played", probabilities["south"][card1], card1)
-	}
-}
-
 func TestPlay(t *testing.T) {
 	roundState := createRoundState()
 	position := (Position)("south")

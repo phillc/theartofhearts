@@ -1,7 +1,5 @@
 package main
 
-type Position string
-
 func buildRoundState(round *Round) *RoundState {
 	var trickStates []*TrickState
 	for _, trick := range round.tricks {
