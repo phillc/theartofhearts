@@ -17,7 +17,7 @@ func buildRoundState(round *Round) *RoundState {
 
 	passingTo := rootPlayer
 	receivedFrom := rootPlayer
-	positions := []Position{"north", "east", "south", "west"}
+	positions := allPositions()
 	rootIndex := -1
 	for i, position := range positions {
 		if position == rootPosition {

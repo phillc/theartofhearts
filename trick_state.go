@@ -27,7 +27,7 @@ func (trickState *TrickState) score() int {
 }
 
 func (trickState *TrickState) positionsFromLeader() []Position {
-	positions := []Position{"north", "east", "south", "west"}
+	positions := allPositions()
 	leaderIndex := -1
 	for i, position := range positions {
 		if position == trickState.leader {

@@ -31,6 +31,7 @@ func (knowledge *Knowledge) possiblyHeldCardsFor(position Position) Cards {
 	return cards
 }
 
+
 type CardKnowledge struct {
 	north bool
 	east bool
@@ -81,3 +82,19 @@ func (cardKnowledge *CardKnowledge) isPossiblyHeldBy(position Position) bool {
 	return possible
 }
 
+func (cardKnowledge *CardKnowledge) probabilities() map[Position]int {
+	probabilities := make(map[Position]int, 4)
+	count := 0
+	for _, position := range allPositions() {
+		if cardKnowledge.isPossiblyHeldBy(position) {
+			count++
+		}
+	}
+
+	for _, position := range allPositions() {
+		if cardKnowledge.isPossiblyHeldBy(position) {
+			probabilities[position] = (100 / count)
+		}
+	}
+	return probabilities
+}

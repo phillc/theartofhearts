@@ -5,6 +5,39 @@ import (
 	"./lib/AgentVsAgent"
 )
 
+func TestCardProbabilities(t *testing.T) {
+	cardKnowledge := CardKnowledge{}
+
+	probabilities := cardKnowledge.probabilities()
+	if probabilities["north"] != 0 || probabilities["east"] != 0 || probabilities["south"] != 0 || probabilities["west"] != 0 {
+		t.Error("Card should not be anywhere", probabilities)
+	}
+
+	cardKnowledge.north = true
+	probabilities = cardKnowledge.probabilities()
+	if probabilities["north"] != 100 || probabilities["east"] != 0 || probabilities["south"] != 0 || probabilities["west"] != 0 {
+		t.Error("Card should be at north", probabilities)
+	}
+
+	cardKnowledge.east = true
+	probabilities = cardKnowledge.probabilities()
+	if probabilities["north"] != 50 || probabilities["east"] != 50 || probabilities["south"] != 0 || probabilities["west"] != 0 {
+		t.Error("Card should be at north or east", probabilities)
+	}
+
+	cardKnowledge.south = true
+	probabilities = cardKnowledge.probabilities()
+	if probabilities["north"] != 33 || probabilities["east"] != 33 || probabilities["south"] != 33 || probabilities["west"] != 0 {
+		t.Error("Card should be at north, east, or south", probabilities)
+	}
+
+	cardKnowledge.west = true
+	probabilities = cardKnowledge.probabilities()
+	if probabilities["north"] != 25 || probabilities["east"] != 25 || probabilities["south"] != 25 || probabilities["west"] != 25 {
+		t.Error("I guess the card could be anywhere", probabilities)
+	}
+}
+
 func TestCardKnowledgeWhenRootHasCard(t *testing.T) {
 	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
 	roundState := createRoundState()
