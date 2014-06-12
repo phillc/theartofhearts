@@ -1,8 +1,5 @@
 all: test build
 
-install:
-	go get "git.apache.org/thrift.git/lib/go/thrift"
-
 build:
 	go build -o bin/my_agent
 

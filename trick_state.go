@@ -11,7 +11,7 @@ type TrickState struct {
 }
 
 func (trickState *TrickState) winner() Position {
-	matchingSuit := trickState.played.allOfSuit(trickState.played[0].suit)
+	matchingSuit := trickState.played.allOfSuit(trickState.played[0].Suit)
 	sort.Sort(sort.Reverse(ByOrder{matchingSuit}))
 	winningCard := matchingSuit[0]
 	winningCardIndex := trickState.played.indexOf(winningCard)

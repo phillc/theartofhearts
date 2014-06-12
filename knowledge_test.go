@@ -2,7 +2,6 @@ package main
 
 import (
 	"testing"
-	"./lib/AgentVsAgent"
 )
 
 func TestCardProbabilities(t *testing.T) {
@@ -39,7 +38,7 @@ func TestCardProbabilities(t *testing.T) {
 }
 
 func TestCardKnowledgeWhenRootHasCard(t *testing.T) {
-	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
+	card1 := Card{ Suit: HEARTS, Rank: TWO }
 	roundState := createRoundState()
 	roundState.south.received(card1)
 
@@ -55,7 +54,7 @@ func TestCardKnowledgeWhenRootHasCard(t *testing.T) {
 }
 
 func TestCardKnowledgeWhenRootDoesNotHaveCard(t *testing.T) {
-	twoClubs := Card{ suit: AgentVsAgent.Suit_CLUBS, rank: AgentVsAgent.Rank_TWO }
+	twoClubs := Card{ Suit: CLUBS, Rank: TWO }
 	roundState := createRoundState()
 
 	cardKnowledge := CardKnowledge{}
@@ -70,7 +69,7 @@ func TestCardKnowledgeWhenRootDoesNotHaveCard(t *testing.T) {
 }
 
 func TestCardKnowledgeWhenCardIsPlayed(t *testing.T) {
-	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
+	card1 := Card{ Suit: HEARTS, Rank: TWO }
 	roundState := createRoundState()
 
 	cardKnowledge := CardKnowledge{}
@@ -90,7 +89,7 @@ func TestCardKnowledgeWhenCardIsPlayed(t *testing.T) {
 }
 
 func TestCardKnowledgeWhenCardIsPlayedByRoot(t *testing.T) {
-	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
+	card1 := Card{ Suit: HEARTS, Rank: TWO }
 	roundState := createRoundState()
 	roundState.south.received(card1)
 
@@ -110,7 +109,7 @@ func TestCardKnowledgeWhenCardIsPlayedByRoot(t *testing.T) {
 }
 
 func TestCardKnowledgeWhenAPlayerDoesNotHaveASuit(t *testing.T) {
-	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
+	card1 := Card{ Suit: HEARTS, Rank: TWO }
 	roundState := createRoundState()
 
 	cardKnowledge := CardKnowledge{}
@@ -120,7 +119,7 @@ func TestCardKnowledgeWhenAPlayerDoesNotHaveASuit(t *testing.T) {
 		t.Error("Test assumes west could have the card at start")
 	}
 
-	roundState.west.discardedOn(card1.suit)
+	roundState.west.discardedOn(card1.Suit)
 
 	cardKnowledge.buildFrom(&roundState, card1)
 

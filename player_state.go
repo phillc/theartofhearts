@@ -1,9 +1,5 @@
 package main
 
-import (
-	"./lib/AgentVsAgent"
-)
-
 type Action struct {
 	dealt bool
 	played bool
@@ -40,7 +36,7 @@ func (action *Action) isDefinitelyHeld() bool {
 type PlayerState struct {
 	actions map[Card]Action
 	root bool
-	emptySuits []AgentVsAgent.Suit // uniqueness?
+	emptySuits []string // uniqueness?
 }
 
 func (playerState *PlayerState) definitelyHeld() Cards {
@@ -89,11 +85,11 @@ func (playerState *PlayerState) passed(card Card) {
 	playerState.actions[card] = action
 }
 
-func (playerState *PlayerState) discardedOn(suit AgentVsAgent.Suit) {
+func (playerState *PlayerState) discardedOn(suit string) {
 	playerState.emptySuits = append(playerState.emptySuits, suit)
 }
 
-func (playerState *PlayerState) hasDiscardedOn(suit AgentVsAgent.Suit) bool {
+func (playerState *PlayerState) hasDiscardedOn(suit string) bool {
 	for _, emptySuit := range playerState.emptySuits {
 		if suit == emptySuit {
 			return true

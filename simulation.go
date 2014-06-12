@@ -1,10 +1,5 @@
 package main
 
-import (
-	"fmt"
-	"./lib/AgentVsAgent"
-)
-
 type Simulation struct {
 	roundState *RoundState
 	children []*Simulation
@@ -14,7 +9,7 @@ type Simulation struct {
 func (simulation *Simulation) advance() {
 	if len(simulation.children) == 0 {
 		if len(simulation.roundState.trickStates) == 0 {
-			twoClubs := Card{ suit: AgentVsAgent.Suit_CLUBS, rank: AgentVsAgent.Rank_TWO }
+			twoClubs := Card{ Suit: CLUBS, Rank: TWO }
 
 			cardKnowledge := CardKnowledge{}
 			cardKnowledge.buildFrom(simulation.roundState, twoClubs)
@@ -51,7 +46,7 @@ func (simulation *Simulation) advance() {
 	} else {
 		/*simulation.children[0].advance()*/
 		if len(simulation.children) > 25 {
-			fmt.Println("# of children advancing:", len(simulation.children))
+			log("# of children advancing:", len(simulation.children))
 		}
 		for _, child := range simulation.children {
 			child.advance()

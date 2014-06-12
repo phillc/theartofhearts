@@ -1,9 +1,5 @@
 package main
 
-import (
-	"./lib/AgentVsAgent"
-)
-
 type RoundState struct {
 	number int
 	north *PlayerState
@@ -36,7 +32,7 @@ func (roundState *RoundState) isHeartsBroken() bool {
 	for _, trick := range roundState.trickStates {
 		cards := trick.played
 		for _, card := range cards {
-			if card.suit == AgentVsAgent.Suit_HEARTS {
+			if card.Suit == HEARTS {
 				broken = true
 				break
 			}
@@ -73,7 +69,7 @@ func (roundState *RoundState) playableCardsOutOf(startingCards Cards) Cards {
 	}
 
 	if !trick.isLeading() {
-		newValidCards := validCards.allOfSuit(trick.played[0].suit)
+		newValidCards := validCards.allOfSuit(trick.played[0].Suit)
 		if len(newValidCards) > 0 {
 			validCards = newValidCards
 		}
@@ -108,7 +104,7 @@ func (roundState *RoundState) evaluate(position Position) int {
 	for card, action := range roundState.playerState(position).actions {
 		if action.isDefinitelyHeld() {
 			// todo: two of clubs doesn't matter if we can just simulate past a couple tricks
-			if card.suit == AgentVsAgent.Suit_CLUBS && card.rank == AgentVsAgent.Rank_TWO {
+			if card.Suit == CLUBS && card.Rank == TWO {
 				handScore = handScore - 13
 			} else {
 				handScore = handScore - card.order()

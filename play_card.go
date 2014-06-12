@@ -2,8 +2,6 @@ package main
 
 import (
 	"time"
-	"./lib/AgentVsAgent"
-  "fmt"
 )
 
 type PlayEvaluation struct {
@@ -11,13 +9,13 @@ type PlayEvaluation struct {
 	value int
 }
 
-func playCard(trick *Trick) *AgentVsAgent.Card {
+func playCard(trick *Trick) *Card {
 	timeout := time.After(800 * time.Millisecond)
 	evalCh := make(chan PlayEvaluation)
 	evaluations := make(map[Card]PlayEvaluation)
 	round := trick.round
 	game := round.game
-	position := (Position)(game.info.Position)
+	position := (Position)(game.info["position"].(string))
 	roundState := buildRoundState(round)
 
 	numEvals := evaluatePlays(roundState, position, evalCh)
@@ -46,12 +44,12 @@ func playCard(trick *Trick) *AgentVsAgent.Card {
 		}
 	}
 
-	return play.card.toAvA()
+	return &play.card
 }
 
 func evaluatePlays(roundState *RoundState, position Position, evalCh chan PlayEvaluation) int {
 	cards := roundState.playableCards()
-	fmt.Println(">>> PLAYABLE CARDS:", cards)
+	log(">>> PLAYABLE CARDS:", cards)
 	for _, card := range cards {
 		go func(card Card) {
 			evalCh <- PlayEvaluation{card, evaluatePlay(roundState, position, card)}
@@ -61,21 +59,21 @@ func evaluatePlays(roundState *RoundState, position Position, evalCh chan PlayEv
 }
 
 func evaluatePlay(roundState *RoundState, position Position, card Card) int {
-	fmt.Println(">>>>>>>>>>evaluating play of", card)
+	log(">>>>>>>>>>evaluating play of", card)
 	newRoundState := roundState.clone()
 	newRoundState.play(card)
 	simulation := Simulation{ roundState: newRoundState }
 
 	for i := 0; i < 2; i++ {
 	// for i := 0; i < (8 - len(newRoundState.currentTrick().played)); i++ {
-		fmt.Println("ADVANCE", i)
+		log("ADVANCE", i)
 		simulation.advance()
 	}
-	fmt.Println("simulating", simulation)
+	log("simulating", simulation)
 	evaluation := newRoundState.evaluate(position)
 	simulatedEvaluation := simulation.evaluate(position)
-	fmt.Println("aaaaaaaaaaaaa!!done. eval:", evaluation, "simulated:", simulatedEvaluation)
-	fmt.Println("Scores: ", newRoundState.scores())
+	log("aaaaaaaaaaaaa!!done. eval:", evaluation, "simulated:", simulatedEvaluation)
+	log("Scores: ", newRoundState.scores())
 	return simulatedEvaluation
 }
 

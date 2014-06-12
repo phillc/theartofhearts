@@ -2,7 +2,6 @@ package main
 
 import (
 	"testing"
-	"./lib/AgentVsAgent"
 )
 
 func TestPlay(t *testing.T) {
@@ -13,7 +12,7 @@ func TestPlay(t *testing.T) {
 	trickState := TrickState{ leader: position, played: played }
 	trickStates := []*TrickState{ &trickState }
 	roundState.trickStates = trickStates
-	card := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
+	card := Card{ Suit: HEARTS, Rank: TWO }
 
 	if len(roundState.currentTrick().played) > 0 {
 		t.Error("there should be no played cards")
@@ -42,12 +41,12 @@ func TestPlay(t *testing.T) {
 
 func TestPass(t *testing.T) {
 	position := (Position)("south")
-	card1 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_TWO }
-	card2 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_THREE }
-	card3 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_FOUR }
-	card4 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_FIVE }
-	card5 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_SIX }
-	card6 := Card{ suit: AgentVsAgent.Suit_HEARTS, rank: AgentVsAgent.Rank_SEVEN }
+	card1 := Card{ Suit: HEARTS, Rank: TWO }
+	card2 := Card{ Suit: HEARTS, Rank: THREE }
+	card3 := Card{ Suit: HEARTS, Rank: FOUR }
+	card4 := Card{ Suit: HEARTS, Rank: FIVE }
+	card5 := Card{ Suit: HEARTS, Rank: SIX }
+	card6 := Card{ Suit: HEARTS, Rank: SEVEN }
 
 	dealtCards := Cards{&card1, &card2, &card3, &card4, &card5, &card6}
 	passedCards := dealtCards[0:3]

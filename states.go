@@ -6,7 +6,7 @@ func buildRoundState(round *Round) *RoundState {
 		trickStates = append(trickStates, buildTrickState(trick))
 	}
 
-	rootPosition := (Position)(round.game.info.Position)
+	rootPosition := (Position)(round.game.info["position"].(string))
 	players := make(map[Position]*PlayerState, 4)
 	players["north"] = &PlayerState{ actions: make(map[Card]Action, 13) }
 	players["east"] = &PlayerState{ actions: make(map[Card]Action, 13) }
@@ -42,16 +42,16 @@ func buildRoundState(round *Round) *RoundState {
 	}
 
 	for _, aCard := range round.dealt {
-		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
+		card := Card{ Suit: aCard.Suit, Rank: aCard.Rank }
 		rootPlayer.dealt(card)
 	}
 	for _, aCard := range round.passed {
-		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
+		card := Card{ Suit: aCard.Suit, Rank: aCard.Rank }
 		rootPlayer.passed(card)
 		passingTo.received(card)
 	}
 	for _, aCard := range round.received {
-		card := Card{ suit: aCard.Suit, rank: aCard.Rank }
+		card := Card{ Suit: aCard.Suit, Rank: aCard.Rank }
 		rootPlayer.received(card)
 		receivedFrom.passed(card)
 	}
@@ -60,8 +60,8 @@ func buildRoundState(round *Round) *RoundState {
 		for index, position := range trickState.positionsFromLeader()[0:len(trickState.played)] {
 			playedCard := *trickState.played[index]
 
-			leadSuit := trickState.played[0].suit
-			if playedCard.suit != leadSuit {
+			leadSuit := trickState.played[0].Suit
+			if playedCard.Suit != leadSuit {
 				players[position].discardedOn(leadSuit)
 			}
 
@@ -82,7 +82,7 @@ func buildRoundState(round *Round) *RoundState {
 func buildTrickState(trick *Trick) *TrickState {
 	var playedCards Cards
 	for _, aCard := range trick.played {
-		playedCards = append(playedCards, &Card{ suit: aCard.Suit, rank: aCard.Rank })
+		playedCards = append(playedCards, &Card{ Suit: aCard.Suit, Rank: aCard.Rank })
 	}
 	return &TrickState{ number: trick.number, leader: (Position)(trick.leader), played: playedCards }
 }

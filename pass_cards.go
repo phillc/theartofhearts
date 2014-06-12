@@ -2,8 +2,6 @@ package main
 
 import (
 	"time"
-	"./lib/AgentVsAgent"
-	"fmt"
 	"sort"
 )
 
@@ -13,13 +11,13 @@ type PassEvaluation struct {
 	value int
 }
 
-func passCards(round Round) []*AgentVsAgent.Card {
-	fmt.Println("passing cards")
+func passCards(round Round) []*Card {
+	log("passing cards")
 	timeout := time.After(700 * time.Millisecond)
 	evalCh := make(chan PassEvaluation)
 	evaluations := make(map[int]PassEvaluation)
 	game := round.game
-	position := (Position)(game.info.Position)
+	position := (Position)(game.info["position"].(string))
 	roundState := buildRoundState(&round)
 
 	numEvals := evaluatePasses(roundState, position, evalCh)
@@ -48,9 +46,9 @@ func passCards(round Round) []*AgentVsAgent.Card {
 		}
 	}
 
-	var cardsToPass []*AgentVsAgent.Card
+	var cardsToPass []*Card
 	for _, card := range pass.cards {
-		cardsToPass = append(cardsToPass, card.toAvA())
+		cardsToPass = append(cardsToPass, card)
 	}
 
 	return cardsToPass
@@ -84,7 +82,7 @@ func evaluatePasses(roundState *RoundState, position Position, evalCh chan PassE
 }
 
 func evaluatePass(roundState *RoundState, position Position, cards Cards) int {
-	fmt.Println(">>>>>>>>>>evaluating pass of", cards)
+	log(">>>>>>>>>>evaluating pass of", cards)
 	newRoundState := roundState.clone()
 	newRoundState.pass(position, cards)
 	return newRoundState.evaluate(position)

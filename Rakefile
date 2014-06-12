@@ -15,7 +15,7 @@ class Agent
   end
 
   def command
-    @command
+    %{ava play hearts --run="#{@command}"}
   end
 end
 

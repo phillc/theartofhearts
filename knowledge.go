@@ -54,7 +54,7 @@ func (cardKnowledge *CardKnowledge) buildFrom(roundState *RoundState, card Card)
 		} else if actions.played {
 			cardKnowledge.ruleOut(allPositions()...)
 			break
-		} else if playerState.root || playerState.hasDiscardedOn(card.suit){
+		} else if playerState.root || playerState.hasDiscardedOn(card.Suit){
 			cardKnowledge.ruleOut(position)
 		}
 	}

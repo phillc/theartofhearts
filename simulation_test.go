@@ -2,17 +2,16 @@ package main
 
 import (
 	"testing"
-	"./lib/AgentVsAgent"
 )
 
 func TestSimulation(t *testing.T) {
 	roundState := createRoundState()
-	card1 := Card{ suit: AgentVsAgent.Suit_CLUBS, rank: AgentVsAgent.Rank_ACE }
-	card2 := Card{ suit: AgentVsAgent.Suit_CLUBS, rank: AgentVsAgent.Rank_KING }
-	card3 := Card{ suit: AgentVsAgent.Suit_CLUBS, rank: AgentVsAgent.Rank_QUEEN }
-	card4 := Card{ suit: AgentVsAgent.Suit_CLUBS, rank: AgentVsAgent.Rank_JACK }
-	card5 := Card{ suit: AgentVsAgent.Suit_CLUBS, rank: AgentVsAgent.Rank_TEN }
-	card6 := Card{ suit: AgentVsAgent.Suit_CLUBS, rank: AgentVsAgent.Rank_NINE }
+	card1 := Card{ Suit: CLUBS, Rank: ACE }
+	card2 := Card{ Suit: CLUBS, Rank: KING }
+	card3 := Card{ Suit: CLUBS, Rank: QUEEN }
+	card4 := Card{ Suit: CLUBS, Rank: JACK }
+	card5 := Card{ Suit: CLUBS, Rank: TEN }
+	card6 := Card{ Suit: CLUBS, Rank: NINE }
 	heldCards := Cards{ &card1, &card2, &card3, &card4, &card5, &card6 }
 
 	for _, card := range heldCards {
@@ -45,7 +44,7 @@ func TestSimulation(t *testing.T) {
 	}
 
 	trick := rootSimulation.children[0].roundState.trickStates[0]
-	if len(trick.played) != 1 || (trick.played[0].suit != AgentVsAgent.Suit_CLUBS || trick.played[0].rank != AgentVsAgent.Rank_TWO) {
+	if len(trick.played) != 1 || (trick.played[0].Suit != CLUBS || trick.played[0].Rank != TWO) {
 		t.Error("Should have played just the two of clubs", trick)
 	}
 
